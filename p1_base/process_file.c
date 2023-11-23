@@ -103,7 +103,7 @@ void process(int fd){
         break;
 
       case EOC:
-        break; // alterar para final do ficheiro
+        return; // alterar para final do ficheiro
     }
   }
 }

@@ -14,21 +14,6 @@
 int main(int argc, char *argv[]) {
   unsigned int state_access_delay_ms = STATE_ACCESS_DELAY_MS;
 
-  if(argc == 2){
-    
-    DIR *directory;
-    struct dirent *ent;
-    directory = opendir(argv[1]);
-    char * file_name;
-    char job_name[6] = "/";
-    while ((ent = readdir (directory)) != NULL){
-      file_name = strcat(job_name, ent->d_name);
-      int fd = open(file_name, O_RDONLY); //usar o concat de paths
-      process(fd);
-    }
-    ems_terminate();
-    // quando o while acabar quero chamar o ems terminate
-  }
   if (argc > 2) {
     char *endptr;
     unsigned long int delay = strtoul(argv[1], &endptr, 10);
@@ -44,4 +29,30 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Failed to initialize EMS\n");
     return 1;
   }
+
+  if(argc == 2){
+    
+    DIR *directory;
+    struct dirent *ent;
+    directory = opendir(argv[1]);
+    char job_name[256];
+    strcpy(job_name, argv[1]);
+    strcat(job_name, "/");
+    char temp_name[256];
+    while ((ent = readdir (directory)) != NULL){
+      memset(temp_name, '\0', 256);
+      strcpy(temp_name, job_name);
+      strcat(temp_name, ent->d_name);
+      int fd = open(temp_name, O_RDONLY); //usar o concat de paths
+      process(fd);
+      close(fd);
+    }
+    closedir(directory);
+    ems_terminate();
+    // quando o while acabar quero chamar o ems terminate
+  }
+  
+  
+  return 0;
+  
 }
