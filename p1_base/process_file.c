@@ -7,6 +7,8 @@
 #include "constants.h"
 #include "operations.h"
 #include "parser.h"
+#include "process_file.h"
+
 //fazer uma funçao a parte com o while(1) que possa ser chamada com file descriptor que é dado a partir do while
 //anterior dos diretorios, no final de cada while interior é para alterar o fd
 //no final de percorrer os ficheiros todos acaba o programa
@@ -101,7 +103,6 @@ void process(int fd){
 
       case EOC:
         break; // alterar para final do ficheiro
-        return 0;
     }
   }
 }
