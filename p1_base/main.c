@@ -1,3 +1,4 @@
+#include <string.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +8,10 @@
 #include "operations.h"
 #include "parser.h"
 
+//fazer uma funçao a parte com o while(1) que possa ser chamada com file descriptor que é dado a partir do while
+//anterior dos diretorios, no final de cada while interior é para alterar o fd
+//no final de percorrer os ficheiros todos acaba o programa
+
 int main(int argc, char *argv[]) {
   unsigned int state_access_delay_ms = STATE_ACCESS_DELAY_MS;
 
@@ -15,9 +20,12 @@ int main(int argc, char *argv[]) {
     DIR *directory;
     struct dirent *ent;
     directory = opendir(argv[1]);
+    char * file_name;
     while ((ent = readdir (directory)) != NULL){
-      
+      file_name = ("jobs/", ent->d_name);
+      int fd = open(file_name); //usar o concat de paths
     }
+    // quando o while acabar quero chamar o ems terminate
   }
   if (argc > 2) {
     char *endptr;
@@ -34,7 +42,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Failed to initialize EMS\n");
     return 1;
   }
-
+  //fazer isto numa função diferente para poder chamar dentro do while
   while (1) {
     unsigned int event_id, delay;
     size_t num_rows, num_columns, num_coords;
@@ -124,7 +132,7 @@ int main(int argc, char *argv[]) {
         break;
 
       case EOC:
-        ems_terminate();
+        ems_terminate(); // alterar para final do ficheiro
         return 0;
     }
   }
