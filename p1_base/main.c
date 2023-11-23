@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     struct dirent *ent;
     directory = opendir(argv[1]);
     char * file_name;
-    char job_name[6] = "jobs/";
+    char job_name[6] = "/";
     while ((ent = readdir (directory)) != NULL){
       file_name = strcat(job_name, ent->d_name);
       int fd = open(file_name, O_RDONLY); //usar o concat de paths

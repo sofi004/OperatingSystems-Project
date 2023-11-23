@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
+
 #include "constants.h"
 #include "operations.h"
 #include "parser.h"

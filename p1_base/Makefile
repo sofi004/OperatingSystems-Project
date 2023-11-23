@@ -13,13 +13,13 @@ endif
 all: ems
 
 ems: main.c constants.h operations.o parser.o eventlist.o
-	$(CC) $(CFLAGS) $(SLEEP) -o ems main.c operations.o parser.o eventlist.o
+	$(CC) $(CFLAGS) $(SLEEP) -o ems process_file.c main.c operations.o parser.o eventlist.o 
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c ${@:.o=.c}
 
 run: ems
-	@./ems
+	@./ems jobs
 
 clean:
 	rm -f *.o ems
