@@ -3,9 +3,6 @@
 
 #include <stddef.h>
 
-void process(int fd);
-
-
-
+void process(int fd/*, int fd1*/);
 
 #endif

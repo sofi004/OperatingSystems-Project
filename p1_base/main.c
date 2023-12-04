@@ -39,12 +39,19 @@ int main(int argc, char *argv[]) {
     strcpy(job_name, argv[1]);
     strcat(job_name, "/");
     char temp_name[256];
+    char temp_name_out[256];
     while ((ent = readdir (directory)) != NULL){
       memset(temp_name, '\0', 256);
       strcpy(temp_name, job_name);
       strcat(temp_name, ent->d_name);
-      int fd = open(temp_name, O_RDONLY); //usar o concat de paths
-      process(fd);
+      int fd = open(temp_name, O_RDONLY);
+
+      memset(temp_name_out, '\0', 256);
+      strcpy(temp_name_out, job_name);
+      strcat(temp_name_out, ent->d_name);
+      //int fd = open("test.txt", O_CREAT | O_TRUNC | O_WRONLY);
+
+      process(fd/*, int fd1*/);
       close(fd);
     }
     closedir(directory);

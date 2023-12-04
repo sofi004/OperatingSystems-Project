@@ -9,7 +9,6 @@
 
 static int read_uint(int fd, unsigned int *value, char *next) {
   char buf[16];
-
   int i = 0;
   while (1) {
     if (read(fd, buf + i, 1) == 0) {
@@ -26,7 +25,6 @@ static int read_uint(int fd, unsigned int *value, char *next) {
 
     i++;
   }
-
   unsigned long ul = strtoul(buf, NULL, 10);
 
   if (ul > UINT_MAX) {
@@ -44,7 +42,7 @@ static void cleanup(int fd) {
     ;
 }
 
-enum Command get_next(int fd) {
+enum Command get_next(int fd/*, int fd1*/) {
   char buf[16];
   if (read(fd, buf, 1) != 1) {
     return EOC;
@@ -56,7 +54,6 @@ enum Command get_next(int fd) {
         cleanup(fd);
         return CMD_INVALID;
       }
-
       return CMD_CREATE;
 
     case 'R':
@@ -64,7 +61,6 @@ enum Command get_next(int fd) {
         cleanup(fd);
         return CMD_INVALID;
       }
-
       return CMD_RESERVE;
 
     case 'S':
@@ -132,6 +128,7 @@ enum Command get_next(int fd) {
     default:
       cleanup(fd);
       return CMD_INVALID;
+    
   }
 }
 
