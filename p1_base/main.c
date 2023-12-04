@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
     char temp_name[256];
     char temp_name_out[256];
     char *trimchar;
+    
     while ((ent = readdir (directory)) != NULL){
       memset(temp_name, '\0', 256);
       strcpy(temp_name, job_name);
