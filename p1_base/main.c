@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <sys/stat.h>
 #include "constants.h"
 #include "operations.h"
 #include "parser.h"
@@ -42,21 +43,23 @@ int main(int argc, char *argv[]) {
     char temp_name_out[256];
     char *trimchar;
     while ((ent = readdir (directory)) != NULL){
-      memset(temp_name, '\0', 256);
-      strcpy(temp_name, job_name);
-      strcat(temp_name, ent->d_name);
-      int fd = open(temp_name, O_RDONLY);
+      if(strstr(ent->d_name, ".jobs") != NULL){
+        printf("%s\n", ent->d_name);
+        memset(temp_name, '\0', 256);
+        strcpy(temp_name, job_name);
+        strcat(temp_name, ent->d_name);
+        int fd = open(temp_name, O_RDONLY);
 
-      memset(temp_name_out, '\0', 256);
-      strcpy(temp_name_out, job_name);
-      strcat(temp_name_out, ent->d_name);
-      trimchar = strchr(temp_name_out, '.');
-      strcpy(trimchar, ".out");
-      printf("%s\n", temp_name_out);
-      int fd1 = open(temp_name_out, O_CREAT | O_TRUNC | O_WRONLY);
+        memset(temp_name_out, '\0', 256);
+        strcpy(temp_name_out, job_name);
+        strcat(temp_name_out, ent->d_name);
+        trimchar = strchr(temp_name_out, '.');
+        strcpy(trimchar, ".out");
+        int fd1 = open(temp_name_out, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
 
-      process(fd, fd1);
-      close(fd);
+        process(fd, fd1);
+        close(fd);
+      }
     }
     closedir(directory);
     ems_terminate();

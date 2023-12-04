@@ -174,14 +174,15 @@ int ems_show(unsigned int event_id, int fd1) {
   for (size_t i = 1; i <= event->rows; i++) {
     for (size_t j = 1; j <= event->cols; j++) {
       unsigned int* seat = get_seat_with_delay(event, seat_index(event, i, j));
-      write(fd1, *seat, 1);
-
+      char  c[2]= {'0' + (char) *seat};
+      write(fd1, c, sizeof(char));
+  
       if (j < event->cols) {
-        write(fd1, ' ', 1);
+        write(fd1, " ", 1);
       }
     }
 
-    printf("\n");
+    write(fd1, "\n", 1);
   }
 
   return 0;
