@@ -13,7 +13,7 @@
 //fazer uma funçao a parte com o while(1) que possa ser chamada com file descriptor que é dado a partir do while
 //anterior dos diretorios, no final de cada while interior é para alterar o fd
 //no final de percorrer os ficheiros todos acaba o programa
-void process(int fd/*, int fd1*/){
+void process(int fd, int fd1){
 //fazer isto numa função diferente para poder chamar dentro do while
   while (1) {
     unsigned int event_id, delay;
@@ -22,7 +22,7 @@ void process(int fd/*, int fd1*/){
 
     fflush(stdout);
 
-    switch (get_next(fd/*, int fd1*/)) {
+    switch (get_next(fd)) {
       case CMD_CREATE:
         if (parse_create(fd, &event_id, &num_rows, &num_columns) != 0) {
           fprintf(stderr, "Invalid command. See HELP for usage\n");
@@ -55,7 +55,7 @@ void process(int fd/*, int fd1*/){
           continue;
         }
 
-        if (ems_show(event_id)) {
+        if (ems_show(event_id, fd1)) {
           fprintf(stderr, "Failed to show event\n");
         }
 

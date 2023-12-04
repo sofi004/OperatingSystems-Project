@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
     char temp_name[256];
     char temp_name_out[256];
     char *trimchar;
+    char *trimchar;
     while ((ent = readdir (directory)) != NULL){
       memset(temp_name, '\0', 256);
       strcpy(temp_name, job_name);
@@ -53,9 +54,12 @@ int main(int argc, char *argv[]) {
       trimchar = strchr(temp_name_out, '.');
       strcpy(trimchar, ".out");
       printf("%s\n", temp_name_out);
-      //int fd = open("test.txt", O_CREAT | O_TRUNC | O_WRONLY);
+      trimchar = strchr(temp_name_out, '.');
+      strcpy(trimchar, ".out");
+      printf("%s\n", temp_name_out);
+      int fd1 = open("test.txt", O_CREAT | O_TRUNC | O_WRONLY);
 
-      process(fd/*, int fd1*/);
+      process(fd, fd1);
       close(fd);
     }
     closedir(directory);
