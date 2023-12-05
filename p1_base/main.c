@@ -49,7 +49,8 @@ int main(int argc, char *argv[]) {
       process_counter ++;
       if (id != 0 && process_counter > *argv[2])
       {
-        wait(&status);
+        pid_t idw = wait(&status);
+        printf("%d", idw);
       }
       if (id == 0){
         if(strstr(ent->d_name, ".jobs") != NULL){
@@ -70,6 +71,12 @@ int main(int argc, char *argv[]) {
           exit(0);
         }
       }
+      /*
+      for(int i = 0; i < process_counter; i++){
+        pid_t idw = wait(&status);
+        printf("%d", idw);
+      }
+      */
     }
     closedir(directory);
     ems_terminate();
