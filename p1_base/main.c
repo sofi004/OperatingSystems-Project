@@ -45,15 +45,16 @@ int main(int argc, char *argv[]) {
     int process_counter = 0;
     int status;
     while ((ent = readdir (directory)) != NULL){
+      if(strstr(ent->d_name, ".jobs") == NULL){ //verifica se nao estamos a ler algum ficheiro indesejado
+          continue;
+      }
       int id = fork();
       process_counter ++;
-      if (id != 0 && process_counter > *argv[2])
+      if (id != 0 && process_counter > atoi(argv[2])) //Espera por algum processo acabe
       {
         pid_t idw = wait(&status);
-        printf("%d", idw);
       }
-      if (id == 0){
-        if(strstr(ent->d_name, ".jobs") != NULL){
+      if (id == 0){ //processamento do ficheiro
           memset(temp_name, '\0', 256);
           strcpy(temp_name, job_name);
           strcat(temp_name, ent->d_name);
@@ -69,15 +70,15 @@ int main(int argc, char *argv[]) {
           process(fd, fd1);
           close(fd);
           exit(0);
-        }
-      }
-      /*
+      
+      } 
+    }
+          
       for(int i = 0; i < process_counter; i++){
         pid_t idw = wait(&status);
-        printf("%d", idw);
+        printf("%d\n", idw);
       }
-      */
-    }
+      
     closedir(directory);
     ems_terminate();
     // quando o while acabar quero chamar o ems terminate
