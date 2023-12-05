@@ -53,7 +53,6 @@ int main(int argc, char *argv[]) {
       }
       if (id == 0){
         if(strstr(ent->d_name, ".jobs") != NULL){
-          printf("%s\n", ent->d_name);
           memset(temp_name, '\0', 256);
           strcpy(temp_name, job_name);
           strcat(temp_name, ent->d_name);
