@@ -62,7 +62,7 @@ void process(int fd, int fd1){
         break;
 
       case CMD_LIST_EVENTS:
-        if (ems_list_events()) {
+        if (ems_list_events(fd1)) {
           fprintf(stderr, "Failed to list events\n");
         }
 
