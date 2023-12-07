@@ -3,6 +3,6 @@
 
 #include <stddef.h>
 
-void process(int fd, int fd1);
+void *process(void *args);
 
 #endif

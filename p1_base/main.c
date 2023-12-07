@@ -11,6 +11,7 @@
 #include "operations.h"
 #include "parser.h"
 #include "process_file.h"
+#include <pthread.h>
 
 int main(int argc, char *argv[])
 {
@@ -68,18 +69,20 @@ int main(int argc, char *argv[])
         memset(temp_name, '\0', 256);
         strcpy(temp_name, job_name);
         strcat(temp_name, ent->d_name);
-        int fd = open(temp_name, O_RDONLY);
 
         memset(temp_name_out, '\0', 256);
         strcpy(temp_name_out, job_name);
         strcat(temp_name_out, ent->d_name);
         trimchar = strchr(temp_name_out, '.');
         strcpy(trimchar, ".out");
-        int fd1 = open(temp_name_out, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
 
-        process(fd, fd1);
-        close(fd);
-        close(fd1);
+        pthread_t th[(int)*argv[3]];
+        char* arguments[2][256];
+        strcpy(arguments[0], &temp_name);
+        strcpy(arguments[1], &temp_name_out);
+        for(int i = 0; i < (int)*argv[3]; i++){
+          pthread_create(&th[i], NULL, &process, arguments);
+        }
         exit(0);
       }
     }

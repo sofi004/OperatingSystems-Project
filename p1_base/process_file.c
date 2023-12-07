@@ -13,8 +13,13 @@
 //fazer uma funçao a parte com o while(1) que possa ser chamada com file descriptor que é dado a partir do while
 //anterior dos diretorios, no final de cada while interior é para alterar o fd
 //no final de percorrer os ficheiros todos acaba o programa
-void process(int fd, int fd1){
+void* process(void *arg){
 //fazer isto numa função diferente para poder chamar dentro do while
+  char* args[2][256] = *(char*)arg;
+  char temp_name[256] = args[0];
+  char temp_name_out[256] = args[1];
+  int fd = open(temp_name, O_RDONLY);
+  int fd1 = open(temp_name_out, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
   while (1) {
     unsigned int event_id, delay;
     size_t num_rows, num_columns, num_coords;
@@ -113,4 +118,6 @@ void process(int fd, int fd1){
         return; // alterar para final do ficheiro
     }
   }
+  close(fd);
+  close(fd1);
 }
