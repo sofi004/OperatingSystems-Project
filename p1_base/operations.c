@@ -195,7 +195,7 @@ int ems_list_events(int fd1) {
   }
 
   if (event_list->head == NULL) {
-    printf("No events\n");
+    write(fd1, "No events\n", sizeof("No events\n") - 1);
     return 0;
   }
 

@@ -86,15 +86,22 @@ void process(int fd, int fd1){
         break;
 
       case CMD_HELP:
-        printf(
+        write(fd1,
             "Available commands:\n"
             "  CREATE <event_id> <num_rows> <num_columns>\n"
             "  RESERVE <event_id> [(<x1>,<y1>) (<x2>,<y2>) ...]\n"
             "  SHOW <event_id>\n"
             "  LIST\n"
-            "  WAIT <delay_ms> [thread_id]\n"  // thread_id is not implemented
-            "  BARRIER\n"                      // Not implemented
-            "  HELP\n");
+            "  WAIT <delay_ms> [thread_id]\n"  
+            "  BARRIER\n"                      
+            "  HELP\n", sizeof("Available commands:\n"
+            "  CREATE <event_id> <num_rows> <num_columns>\n"
+            "  RESERVE <event_id> [(<x1>,<y1>) (<x2>,<y2>) ...]\n"
+            "  SHOW <event_id>\n"
+            "  LIST\n"
+            "  WAIT <delay_ms> [thread_id]\n"  
+            "  BARRIER\n"                      
+            "  HELP\n") - 1);
 
         break;
 
