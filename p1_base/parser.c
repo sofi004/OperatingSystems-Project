@@ -42,7 +42,7 @@ static void cleanup(int fd) {
     ;
 }
 
-enum Command get_next(int fd/*, int fd1*/) {
+enum Command get_next(int fd) {
   char buf[16];
   if (read(fd, buf, 1) != 1) {
     return EOC;
