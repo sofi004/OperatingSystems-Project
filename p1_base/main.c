@@ -14,9 +14,9 @@
 #include <pthread.h>
 #include "structs.h"
 
-
 int main(int argc, char *argv[])
 {
+  
   unsigned int state_access_delay_ms = STATE_ACCESS_DELAY_MS;
 
   if (argc > 4)
@@ -77,21 +77,33 @@ int main(int argc, char *argv[])
         strcat(temp_name_out, ent->d_name);
         trimchar = strchr(temp_name_out, '.');
         strcpy(trimchar, ".out");
-
+        int current_line = 0;
         pthread_t th[(int)*argv[3]];
         struct Thread_struct thread_struct;
-        thread_struct.current_line = 0;
+
+        thread_struct.current_line = &current_line;
+        thread_struct.max_threads = atoi(argv[3]);
         strcpy(thread_struct.fd_name, temp_name);
         thread_struct.fd_out = open(temp_name_out, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+        while (1)
+        {
+          for (int i = 0; i < atoi(argv[3]); i++)
+          {
+            
+            thread_struct.index = i;
+            pthread_create(&th[i], NULL, &process, (void *)&thread_struct);
+          }
 
-        for(int i = 0; i < (int)*argv[3]; i++){
-      
-          pthread_create(&th[i], NULL, &process, (void *)&thread_struct);
+          for (int i = 0; i < atoi(argv[3]); i++)
+          {
+
+            pthread_join(th[i], NULL);
+          }
+          if(current_line == 0){
+            break;
+          }
         }
-        for(int i = 0; i < (int)*argv[3]; i++){
-      
-          pthread_join(th[i], NULL);
-        }
+
         close(thread_struct.fd_out);
         exit(0);
       }
