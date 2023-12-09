@@ -2,31 +2,37 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
-
+#include <fcntl.h>
 #include "constants.h"
 #include "operations.h"
 #include "parser.h"
 #include "process_file.h"
+#include "structs.h"
 
 //fazer uma funçao a parte com o while(1) que possa ser chamada com file descriptor que é dado a partir do while
 //anterior dos diretorios, no final de cada while interior é para alterar o fd
 //no final de percorrer os ficheiros todos acaba o programa
+
 void* process(void *arg){
-//fazer isto numa função diferente para poder chamar dentro do while
-  char* args[2][256] = *(char*)arg;
-  char temp_name[256] = args[0];
-  char temp_name_out[256] = args[1];
-  int fd = open(temp_name, O_RDONLY);
-  int fd1 = open(temp_name_out, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+
+struct Thread_struct *thread_struct = (struct Thread_struct *)arg;
+
+
+  int current_line = thread_struct->current_line;
+  char fd_name[256];
+  strcpy(fd_name, thread_struct->fd_name);
+  int fd = open(fd_name, O_RDONLY);
+
   while (1) {
     unsigned int event_id, delay;
     size_t num_rows, num_columns, num_coords;
     size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
 
     fflush(stdout);
-
+    current_line++;
     switch (get_next(fd)) {
       case CMD_CREATE:
         if (parse_create(fd, &event_id, &num_rows, &num_columns) != 0) {
@@ -60,14 +66,14 @@ void* process(void *arg){
           continue;
         }
 
-        if (ems_show(event_id, fd1)) {
+        if (ems_show(event_id, thread_struct->fd_out)) {
           fprintf(stderr, "Failed to show event\n");
         }
 
         break;
 
       case CMD_LIST_EVENTS:
-        if (ems_list_events(fd1)) {
+        if (ems_list_events(thread_struct->fd_out)) {
           fprintf(stderr, "Failed to list events\n");
         }
 
@@ -91,7 +97,7 @@ void* process(void *arg){
         break;
 
       case CMD_HELP:
-        write(fd1,
+        write(thread_struct->fd_out,
             "Available commands:\n"
             "  CREATE <event_id> <num_rows> <num_columns>\n"
             "  RESERVE <event_id> [(<x1>,<y1>) (<x2>,<y2>) ...]\n"
@@ -115,9 +121,8 @@ void* process(void *arg){
         break;
 
       case EOC:
-        return; // alterar para final do ficheiro
+        exit(current_line); // alterar para final do ficheiro
     }
   }
   close(fd);
-  close(fd1);
 }

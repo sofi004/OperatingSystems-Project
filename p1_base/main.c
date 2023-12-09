@@ -12,12 +12,14 @@
 #include "parser.h"
 #include "process_file.h"
 #include <pthread.h>
+#include "structs.h"
+
 
 int main(int argc, char *argv[])
 {
   unsigned int state_access_delay_ms = STATE_ACCESS_DELAY_MS;
 
-  if (argc > 3)
+  if (argc > 4)
   {
     char *endptr;
     unsigned long int delay = strtoul(argv[1], &endptr, 10);
@@ -36,7 +38,7 @@ int main(int argc, char *argv[])
     return 1;
   }
 
-  if (argc == 3)
+  if (argc == 4)
   {
     DIR *directory;
     struct dirent *ent;
@@ -77,12 +79,20 @@ int main(int argc, char *argv[])
         strcpy(trimchar, ".out");
 
         pthread_t th[(int)*argv[3]];
-        char* arguments[2][256];
-        strcpy(arguments[0], &temp_name);
-        strcpy(arguments[1], &temp_name_out);
+        struct Thread_struct thread_struct;
+        thread_struct.current_line = 0;
+        strcpy(thread_struct.fd_name, temp_name);
+        thread_struct.fd_out = open(temp_name_out, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+
         for(int i = 0; i < (int)*argv[3]; i++){
-          pthread_create(&th[i], NULL, &process, arguments);
+      
+          pthread_create(&th[i], NULL, &process, (void *)&thread_struct);
         }
+        for(int i = 0; i < (int)*argv[3]; i++){
+      
+          pthread_join(th[i], NULL);
+        }
+        close(thread_struct.fd_out);
         exit(0);
       }
     }
