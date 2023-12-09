@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
         trimchar = strchr(temp_name_out, '.');
         strcpy(trimchar, ".out");
         int current_line = 0;
-        pthread_t th[(int)*argv[3]];
+        pthread_t th[atoi(argv[3])];
         struct Thread_struct thread_struct;
 
         thread_struct.current_line = &current_line;

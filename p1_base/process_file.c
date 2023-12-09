@@ -35,6 +35,8 @@ void *process(void *arg)
   if (thread_index == temp_current_line % max_threads)
   {
     lock_thread = true;
+  }else{
+    lock_thread = false;
   }
   while (1)
   {
