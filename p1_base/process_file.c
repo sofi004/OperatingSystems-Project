@@ -24,11 +24,13 @@ void *process(void *arg)
   struct Thread_struct *thread_struct = (struct Thread_struct *)arg;
   bool lock_thread;
   int temp_current_line = 0;
+  //Save the structure values
   int max_threads = thread_struct->max_threads;
   int current_line = *(thread_struct->current_line);
   int thread_index = thread_struct->index;
   char fd_name[256];
   strcpy(fd_name, thread_struct->fd_name);
+  //
   int fd = open(fd_name, O_RDONLY);
   if (thread_index == temp_current_line % max_threads)
   {
