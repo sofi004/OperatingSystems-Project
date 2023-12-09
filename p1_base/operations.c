@@ -58,6 +58,7 @@ int ems_init(unsigned int delay_ms) {
   event_list = create_list();
   state_access_delay_ms = delay_ms;
   pthread_mutex_unlock(&mutex);
+  pthread_mutex_destroy(&mutex);
   return event_list == NULL;
 }
 
@@ -70,6 +71,7 @@ int ems_terminate() {pthread_mutex_init(&mutex, NULL);
   pthread_mutex_lock(&mutex);
   free_list(event_list);
   pthread_mutex_unlock(&mutex);
+  pthread_mutex_destroy(&mutex);
   return 0;
 }
 
@@ -89,6 +91,7 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
   if (event == NULL) {
     //fprintf(stderr, "Error allocating memory for event\n");
     pthread_mutex_unlock(&mutex);
+    pthread_mutex_destroy(&mutex);
     return 1;
   }
 
@@ -102,6 +105,7 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
     fprintf(stderr, "Error allocating memory for event data\n");
     free(event);
     pthread_mutex_unlock(&mutex);
+    pthread_mutex_destroy(&mutex);
     return 1;
   }
 
@@ -114,9 +118,11 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
     free(event->data);
     free(event);
     pthread_mutex_unlock(&mutex);
+    pthread_mutex_destroy(&mutex);
     return 1;
   }
   pthread_mutex_unlock(&mutex);
+  pthread_mutex_destroy(&mutex);
   return 0;
 }
 
@@ -126,6 +132,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
   if (event_list == NULL) {
     //fprintf(stderr, "EMS state must be initialized\n");
     pthread_mutex_unlock(&mutex);
+    pthread_mutex_destroy(&mutex);
     return 1;
   }
 
@@ -134,6 +141,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
   if (event == NULL) {
     //fprintf(stderr, "Event not found\n");
     pthread_mutex_unlock(&mutex);
+    pthread_mutex_destroy(&mutex);
     return 1;
   }
 
@@ -164,9 +172,11 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
       *get_seat_with_delay(event, seat_index(event, xs[j], ys[j])) = 0;
     }
     pthread_mutex_unlock(&mutex);
+    pthread_mutex_destroy(&mutex);
     return 1;
   }
   pthread_mutex_unlock(&mutex);
+  pthread_mutex_destroy(&mutex);
   return 0;
 }
 
@@ -176,6 +186,7 @@ int ems_show(unsigned int event_id, int fd1) {
   if (event_list == NULL) {
     //fprintf(stderr, "EMS state must be initialized\n");
     pthread_mutex_unlock(&mutex);
+    pthread_mutex_destroy(&mutex);
     return 1;
   }
 
@@ -184,6 +195,7 @@ int ems_show(unsigned int event_id, int fd1) {
   if (event == NULL) {
     //fprintf(stderr, "Event not found\n");
     pthread_mutex_unlock(&mutex);
+    pthread_mutex_destroy(&mutex);
     return 1;
   }
 
@@ -201,6 +213,7 @@ int ems_show(unsigned int event_id, int fd1) {
     write(fd1, "\n", 1);
   }
   pthread_mutex_unlock(&mutex);
+  pthread_mutex_destroy(&mutex);
 
   return 0;
 }
@@ -211,12 +224,14 @@ int ems_list_events(int fd1) {
   if (event_list == NULL) {
     //fprintf(stderr, "EMS state must be initialized\n");
     pthread_mutex_unlock(&mutex);
+    pthread_mutex_destroy(&mutex);
     return 1;
   }
 
   if (event_list->head == NULL) {
     write(fd1, "No events\n", sizeof("No events\n") - 1);
     pthread_mutex_unlock(&mutex);
+    pthread_mutex_destroy(&mutex);
     return 0;
   }
 
@@ -231,7 +246,7 @@ int ems_list_events(int fd1) {
     current = current->next;
   }
   pthread_mutex_unlock(&mutex);
-
+  pthread_mutex_destroy(&mutex);
   return 0;
 }
 

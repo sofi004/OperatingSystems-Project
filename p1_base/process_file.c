@@ -32,12 +32,6 @@ void *process(void *arg)
   strcpy(fd_name, thread_struct->fd_name);
   //
   int fd = open(fd_name, O_RDONLY);
-  if (thread_index == temp_current_line % max_threads)
-  {
-    lock_thread = true;
-  }else{
-    lock_thread = false;
-  }
   while (1)
   {
     unsigned int event_id, delay;
@@ -45,6 +39,12 @@ void *process(void *arg)
     size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
     fflush(stdout);
     temp_current_line++;
+    if (thread_index == temp_current_line % max_threads)
+    {
+      lock_thread = true;
+    }else{
+      lock_thread = false;
+    }
     if(temp_current_line <= current_line){
         char ch;
          while (read(fd, &ch, 1) == 1 && ch != '\n')
