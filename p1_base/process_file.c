@@ -30,7 +30,7 @@ void *process(void *arg)
   char fd_name[256];
   strcpy(fd_name, thread_struct->fd_name);
   int fd = open(fd_name, O_RDONLY);
-  if (thread_index == current_line % max_threads)
+  if (thread_index == temp_current_line % max_threads)
   {
     lock_thread = true;
   }
