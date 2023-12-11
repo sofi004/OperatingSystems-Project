@@ -77,34 +77,37 @@ int main(int argc, char *argv[])
         strcat(temp_name_out, ent->d_name);
         trimchar = strchr(temp_name_out, '.');
         strcpy(trimchar, ".out");
-        int current_line = 0;
+        
         pthread_t th[atoi(argv[3])];
-        struct Thread_struct thread_struct;
-
-        thread_struct.current_line = &current_line;
-        thread_struct.max_threads = atoi(argv[3]);
-        strcpy(thread_struct.fd_name, temp_name);
-        thread_struct.fd_out = open(temp_name_out, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+        struct Thread_struct thread_struct[atoi(argv[3])];
+        int temp_barrier_line = 0;
+        int fd_out = open(temp_name_out, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
         while (1)
         {
           for (int i = 0; i < atoi(argv[3]); i++)
           {
             
-            thread_struct.index = i;
-            pthread_create(&th[i], NULL, &process, (void *)&thread_struct);
+            thread_struct[i].fd_out = fd_out;
+            thread_struct[i].max_threads = atoi(argv[3]);
+            strcpy(thread_struct[i].fd_name, temp_name);
+            thread_struct[i].barrier_line = temp_barrier_line;
+            thread_struct[i].index = i;
+            pthread_create(&th[i], NULL, &process, (void *)&thread_struct[i]);
           }
 
           for (int i = 0; i < atoi(argv[3]); i++)
           {
-
-            pthread_join(th[i], NULL);
+            
+            pthread_join(th[i], (void **)&temp_barrier_line);
+            printf("%d\n", thread_struct[i].barrier_line);
+            
           }
-          if(current_line == 0){
+          if(temp_barrier_line == 0){
             break;
           }
         }
 
-        close(thread_struct.fd_out);
+        close(fd_out);
         ems_terminate();
         exit(0);
       }

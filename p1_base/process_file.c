@@ -22,15 +22,15 @@ void *process(void *arg)
 {
   struct Thread_struct *thread_struct = (struct Thread_struct *)arg;
   bool lock_thread;
-  int temp_current_line = 0;
+  size_t temp_current_line = 0;
+  
   //Save the structure values
   int max_threads = thread_struct->max_threads;
-  int current_line = *(thread_struct->current_line);
+  int barrier_line = thread_struct->barrier_line;
   int thread_index = thread_struct->index;
   char fd_name[256];
   strcpy(fd_name, thread_struct->fd_name);
   //
-
   int fd = open(fd_name, O_RDONLY);
   if(fd == -1){
     fprintf(stderr, "invalid file descriptor\n");
@@ -38,31 +38,29 @@ void *process(void *arg)
   
   while (1)
   {
-    unsigned int event_id, delay;
+    unsigned int event_id, delay, thread_id;
     size_t num_rows, num_columns, num_coords;
     size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
     fflush(stdout);
-    if (thread_index == temp_current_line % max_threads)
+    if (thread_index == (int)temp_current_line % max_threads)
     {
       lock_thread = true;
     }else{
       lock_thread = false;
     }
-    printf("%s, corri o codigo, %d\n", fd_name, temp_current_line);
+    
     temp_current_line++;
-    if(temp_current_line <= current_line){
+    if((int)temp_current_line <= barrier_line){
       char ch;
-         while (read(fd, &ch, 1) == 1 && ch != '\n')
-         ;
+         while (read(fd, &ch, 1) == 1 && ch != '\n');
       continue;
       //lock_thread = false;
-    }
-    
+    }    
     switch (get_next(fd))
     {
 
     case CMD_CREATE:
-      if (lock_thread && (parse_create(fd, &event_id, &num_rows, &num_columns) != 0))
+      if (parse_create(fd, &event_id, &num_rows, &num_columns) != 0)
       {
         // fprintf(stderr, "Invalid command. See HELP for usage\n");
         continue;
@@ -76,9 +74,8 @@ void *process(void *arg)
       break;
 
     case CMD_RESERVE:
-      if(lock_thread){
         num_coords = parse_reserve(fd, MAX_RESERVATION_SIZE, &event_id, xs, ys);
-      }
+      
       if (num_coords == 0)
       {
         // fprintf(stderr, "Invalid command. See HELP for usage\n");
@@ -93,8 +90,9 @@ void *process(void *arg)
       break;
 
     case CMD_SHOW:
-      if (lock_thread &&(parse_show(fd, &event_id) != 0))
-      {
+      //printf("show a thread %d, está a executar a linha %d do ficheiro %s\n", thread_index, *temp_current_line, fd_name);
+      if(parse_show(fd, &event_id) != 0){
+      
         // fprintf(stderr, "Invalid command. See HELP for usage\n");
         continue;
       }
@@ -107,6 +105,7 @@ void *process(void *arg)
       break;
 
     case CMD_LIST_EVENTS:
+    //printf("list a thread %d, está a executar a linha %d  do ficheiro %s\n", thread_index, *temp_current_line, fd_name);
       if (lock_thread &&(ems_list_events(thread_struct->fd_out)))
       {
         // fprintf(stderr, "Failed to list events\n");
@@ -115,15 +114,15 @@ void *process(void *arg)
       break;
 
     case CMD_WAIT:
-      if (lock_thread &&(parse_wait(fd, &delay, NULL) == -1))
+      int return_parse = parse_wait(fd, &delay, &thread_id);
+      if (return_parse == -1)
       { // thread_id is not implemented
         // fprintf(stderr, "Invalid command. See HELP for usage\n");
         continue;
-      }
+      }else if((delay > 0) && (return_parse == 0)){
+        ems_wait(delay);
 
-      if (lock_thread &&(delay > 0))
-      {
-        // printf("Waiting...\n");
+      }else if((delay > 0) && (thread_index == (int)thread_id)){
         ems_wait(delay);
       }
 
@@ -131,7 +130,6 @@ void *process(void *arg)
 
     case CMD_INVALID:
       // fprintf(stderr, "Invalid command. See HELP for usage\n");
-      temp_current_line--;
       break;
 
     case CMD_HELP:
@@ -159,20 +157,23 @@ void *process(void *arg)
       break;
 
     case CMD_BARRIER: // Not implemented
-      //if(lock_thread){
-        printf("Nome do ficheiro: %s, entrei na barrier\n", fd_name);
-        *(thread_struct->current_line) = temp_current_line;
+      
+        printf("Nome do ficheiro: %s, a thread %d entrei na barrier e a temp current line é %ld\n", fd_name, thread_index, temp_current_line);
         close(fd);
-        pthread_exit(NULL);
-      //}
-      break;
+        printf("a linha é %ld\n", temp_current_line);
+        
+        pthread_exit((int *)temp_current_line);
+        break;
     case CMD_EMPTY:
       break;
 
     case EOC:
-      *(thread_struct->current_line) = 0;
       close(fd);
-      pthread_exit(NULL);
+      temp_current_line = 0;
+      
+      printf("Sou a thread: %d, no ficheiro %s, com a linha %ld\n", thread_index, fd_name, temp_current_line );
+      pthread_exit((void *)temp_current_line);
+      break;
     }
   }
   close(fd);
