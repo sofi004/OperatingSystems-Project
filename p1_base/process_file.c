@@ -20,7 +20,6 @@
 
 void *process(void *arg)
 {
-
   struct Thread_struct *thread_struct = (struct Thread_struct *)arg;
   bool lock_thread;
   int temp_current_line = 0;
@@ -31,25 +30,32 @@ void *process(void *arg)
   char fd_name[256];
   strcpy(fd_name, thread_struct->fd_name);
   //
+
   int fd = open(fd_name, O_RDONLY);
+  if(fd == -1){
+    fprintf(stderr, "invalid file descriptor\n");
+  }
+  
   while (1)
   {
     unsigned int event_id, delay;
     size_t num_rows, num_columns, num_coords;
     size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
     fflush(stdout);
-    temp_current_line++;
     if (thread_index == temp_current_line % max_threads)
     {
       lock_thread = true;
     }else{
       lock_thread = false;
     }
+    printf("%s, corri o codigo, %d\n", fd_name, temp_current_line);
+    temp_current_line++;
     if(temp_current_line <= current_line){
-        char ch;
+      char ch;
          while (read(fd, &ch, 1) == 1 && ch != '\n')
          ;
       continue;
+      //lock_thread = false;
     }
     
     switch (get_next(fd))
@@ -125,6 +131,7 @@ void *process(void *arg)
 
     case CMD_INVALID:
       // fprintf(stderr, "Invalid command. See HELP for usage\n");
+      temp_current_line--;
       break;
 
     case CMD_HELP:
@@ -152,15 +159,20 @@ void *process(void *arg)
       break;
 
     case CMD_BARRIER: // Not implemented
-      *(thread_struct->current_line) = temp_current_line;
-      pthread_exit(NULL);
+      //if(lock_thread){
+        printf("Nome do ficheiro: %s, entrei na barrier\n", fd_name);
+        *(thread_struct->current_line) = temp_current_line;
+        close(fd);
+        pthread_exit(NULL);
+      //}
       break;
     case CMD_EMPTY:
       break;
 
     case EOC:
       *(thread_struct->current_line) = 0;
-       pthread_exit(NULL);
+      close(fd);
+      pthread_exit(NULL);
     }
   }
   close(fd);

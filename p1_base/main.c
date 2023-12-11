@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
         }
 
         close(thread_struct.fd_out);
+        ems_terminate();
         exit(0);
       }
     }
