@@ -33,6 +33,13 @@ int append_to_list(struct EventList* list, struct Event* event) {
 static void free_event(struct Event* event) {
   if (!event) return;
 
+  // Liberar a memória alocada para a lista 2D
+  for (size_t i = 0; i < event->rows; ++i) {
+      free(event->lock_list[i]);
+  }
+  // Liberar a memória alocada para o array principal
+  free(event->lock_list);
+  
   free(event->data);
   free(event);
 }

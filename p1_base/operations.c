@@ -101,6 +101,25 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
   event->reservations = 0;
   event->data = malloc(num_rows * num_cols * sizeof(unsigned int));
 
+  event->lock_list = (pthread_mutex_t**)malloc(event->rows * sizeof(pthread_mutex_t*));
+
+  if (event->lock_list == NULL) {
+        // Tratar falha na alocação de memória
+        fprintf(stderr, "Memory allocation failed for rows.\n");
+        exit(EXIT_FAILURE);
+  }
+
+  for (size_t i = 0; i < event->rows; ++i) {
+    event->lock_list[i] = (pthread_mutex_t*)malloc(event->cols * sizeof(pthread_mutex_t));
+
+    if (event->lock_list[i] == NULL) {
+        // Tratar falha na alocação de memória
+        fprintf(stderr, "Memory allocation failed for row %zu.\n", i);
+        exit(EXIT_FAILURE);
+    }
+  }
+
+
   if (event->data == NULL) {
     fprintf(stderr, "Error allocating memory for event data\n");
     free(event);

@@ -23,7 +23,7 @@ void *process(void *arg)
   struct Thread_struct *thread_struct = (struct Thread_struct *)arg;
   bool lock_thread;
   size_t temp_current_line = 0;
-  
+  pthread_mutex_t *show_lock = thread_struct->shared_lock;
   //Save the structure values
   int max_threads = thread_struct->max_threads;
   int barrier_line = thread_struct->barrier_line;
@@ -97,19 +97,30 @@ void *process(void *arg)
         continue;
       }
 
-      if (lock_thread &&(ems_show(event_id, thread_struct->fd_out)))
+      if (lock_thread)
       {
+        pthread_mutex_lock(show_lock);
+        if(ems_show(event_id, thread_struct->fd_out)){
         // fprintf(stderr, "Failed to show event\n");
+        }
+        pthread_mutex_unlock(show_lock);
       }
 
       break;
 
     case CMD_LIST_EVENTS:
+    
+    
     //printf("list a thread %d, está a executar a linha %d  do ficheiro %s\n", thread_index, *temp_current_line, fd_name);
-      if (lock_thread &&(ems_list_events(thread_struct->fd_out)))
+      if (lock_thread)
       {
+        pthread_mutex_lock(show_lock);
+        if(ems_list_events(thread_struct->fd_out)){
         // fprintf(stderr, "Failed to list events\n");
+        }
+        pthread_mutex_unlock(show_lock);
       }
+
 
       break;
 
@@ -134,6 +145,7 @@ void *process(void *arg)
 
     case CMD_HELP:
       if(lock_thread){
+        pthread_mutex_lock(show_lock);
         write(thread_struct->fd_out,
             "Available commands:\n"
             "  CREATE <event_id> <num_rows> <num_columns>\n"
@@ -152,6 +164,7 @@ void *process(void *arg)
                    "  BARRIER\n"
                    "  HELP\n") -
                 1);
+        pthread_mutex_unlock(show_lock);
       }
 
       break;

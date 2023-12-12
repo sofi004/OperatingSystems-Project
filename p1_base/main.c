@@ -79,6 +79,8 @@ int main(int argc, char *argv[])
         strcpy(trimchar, ".out");
         //processing of the threads
         pthread_t th[atoi(argv[3])];
+        pthread_mutex_t lock;
+        pthread_mutex_init(&lock, NULL);
         struct Thread_struct thread_struct[atoi(argv[3])];
         int temp_barrier_line = 0;
         //the output file descriptor is shared between threads
@@ -89,6 +91,7 @@ int main(int argc, char *argv[])
           for (int i = 0; i < atoi(argv[3]); i++)
           {
             //inicialization of the structure as an argument for the thread_function
+            thread_struct[i].shared_lock = &lock;
             thread_struct[i].fd_out = fd_out;
             thread_struct[i].max_threads = atoi(argv[3]);
             strcpy(thread_struct[i].fd_name, temp_name);
@@ -107,7 +110,7 @@ int main(int argc, char *argv[])
             break;
           }
         }
-
+        pthread_mutex_destroy(&lock);
         close(fd_out);
         ems_terminate();
         exit(0);
