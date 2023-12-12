@@ -19,7 +19,7 @@ ems: main.c constants.h operations.o parser.o eventlist.o process_file.o
 	$(CC) $(CFLAGS) -c ${@:.o=.c}
 
 run: ems
-	@./ems jobs 3 2
+	@./ems jobs 10 10
 
 clean:
 	rm -f *.o .out ems

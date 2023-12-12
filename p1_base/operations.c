@@ -111,6 +111,7 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
 
   for (size_t i = 0; i < event->rows; ++i) {
     event->lock_list[i] = (pthread_mutex_t*)malloc(event->cols * sizeof(pthread_mutex_t));
+    pthread_mutex_init(&event->lock_list[i], NULL);
 
     if (event->lock_list[i] == NULL) {
         // Tratar falha na alocação de memória
