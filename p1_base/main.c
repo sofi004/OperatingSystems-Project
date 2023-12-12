@@ -67,26 +67,28 @@ int main(int argc, char *argv[])
         process_counter--;
       }
       if (id == 0)
-      { // processamento do ficheiro
+      { //processing of the .jobs file name
         memset(temp_name, '\0', 256);
         strcpy(temp_name, job_name);
         strcat(temp_name, ent->d_name);
-
+        //processing of the .out file name
         memset(temp_name_out, '\0', 256);
         strcpy(temp_name_out, job_name);
         strcat(temp_name_out, ent->d_name);
         trimchar = strchr(temp_name_out, '.');
         strcpy(trimchar, ".out");
-        
+        //processing of the threads
         pthread_t th[atoi(argv[3])];
         struct Thread_struct thread_struct[atoi(argv[3])];
         int temp_barrier_line = 0;
-        int fd_out = open(temp_name_out, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+        //the output file descriptor is shared between threads
+        int fd_out = open(temp_name_out, O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR); 
+        //We use the while loop so if we find a barrier our threads will all join be created again
         while (1)
         {
           for (int i = 0; i < atoi(argv[3]); i++)
           {
-            
+            //inicialization of the structure as an argument for the thread_function
             thread_struct[i].fd_out = fd_out;
             thread_struct[i].max_threads = atoi(argv[3]);
             strcpy(thread_struct[i].fd_name, temp_name);
@@ -94,14 +96,13 @@ int main(int argc, char *argv[])
             thread_struct[i].index = i;
             pthread_create(&th[i], NULL, &process, (void *)&thread_struct[i]);
           }
-
+          //for loop to join all the threads and storing the return value
           for (int i = 0; i < atoi(argv[3]); i++)
           {
-            
-            pthread_join(th[i], (void **)&temp_barrier_line);
-            printf("%d\n", thread_struct[i].barrier_line);
-            
+            pthread_join(th[i], (void **)&temp_barrier_line);            
           }
+          /*in case there's no barrier, the temp_barrier_line == 0 and it means we finished
+          processing our file and we can leave the while loop */
           if(temp_barrier_line == 0){
             break;
           }

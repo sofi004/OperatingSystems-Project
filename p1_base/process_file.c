@@ -158,9 +158,9 @@ void *process(void *arg)
 
     case CMD_BARRIER: // Not implemented
       
-        printf("Nome do ficheiro: %s, a thread %d entrei na barrier e a temp current line é %ld\n", fd_name, thread_index, temp_current_line);
+        //printf("Nome do ficheiro: %s, a thread %d entrei na barrier e a temp current line é %ld\n", fd_name, thread_index, temp_current_line);
         close(fd);
-        printf("a linha é %ld\n", temp_current_line);
+        //printf("a linha é %ld\n", temp_current_line);
         
         pthread_exit((int *)temp_current_line);
         break;
@@ -171,7 +171,7 @@ void *process(void *arg)
       close(fd);
       temp_current_line = 0;
       
-      printf("Sou a thread: %d, no ficheiro %s, com a linha %ld\n", thread_index, fd_name, temp_current_line );
+      //printf("Sou a thread: %d, no ficheiro %s, com a linha %ld\n", thread_index, fd_name, temp_current_line );
       pthread_exit((void *)temp_current_line);
       break;
     }
