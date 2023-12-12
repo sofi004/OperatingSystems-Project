@@ -111,8 +111,9 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
 
   for (size_t i = 0; i < event->rows; ++i) {
     event->lock_list[i] = (pthread_mutex_t*)malloc(event->cols * sizeof(pthread_mutex_t));
-    pthread_mutex_init(&event->lock_list[i], NULL);
-
+    for(size_t j = 0; j < event->cols; j++){
+      pthread_mutex_init(&event->lock_list[i][j], NULL);
+    }
     if (event->lock_list[i] == NULL) {
         // Tratar falha na alocação de memória
         fprintf(stderr, "Memory allocation failed for row %zu.\n", i);
@@ -181,7 +182,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
       //fprintf(stderr, "Seat already reserved\n");
       break;
     }
-
+    pthread_mutex_lock(&event->lock_list[row - 1][col - 1]);
     *get_seat_with_delay(event, seat_index(event, row, col)) = reservation_id;
   }
 
@@ -190,13 +191,15 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
     event->reservations--;
     for (size_t j = 0; j < i; j++) {
       *get_seat_with_delay(event, seat_index(event, xs[j], ys[j])) = 0;
+      pthread_mutex_unlock(&event->lock_list[xs[j]-1][ys[j]-1]);
     }
     //pthread_mutex_unlock(&mutex);
     //pthread_mutex_destroy(&mutex);
     return 1;
   }
-  //pthread_mutex_unlock(&mutex);
-  //pthread_mutex_destroy(&mutex);
+  for (size_t j = 0; j < i; j++) {
+    pthread_mutex_unlock(&event->lock_list[xs[j]-1][ys[j]-1]);
+  }
   return 0;
 }
 

@@ -35,8 +35,10 @@ static void free_event(struct Event* event) {
 
   // Liberar a memória alocada para a lista 2D
   for (size_t i = 0; i < event->rows; ++i) {
-      pthread_mutex_destroy(event->lock_list[i]);
-      free(event->lock_list[i]);
+    for(size_t j = 0; j < event->cols; j++){
+      pthread_mutex_destroy(&event->lock_list[i][j]);
+    }
+    free(event->lock_list[i]);
   }
   // Liberar a memória alocada para o array principal
   free(event->lock_list);
