@@ -153,7 +153,7 @@ void swap(size_t* a, size_t* b) {
     *b = temp;
 }
 
-void bubbleSort(size_t arr[], size_t arr2[], size_t n) {
+void bubbleSortx(size_t arr[], size_t arr2[], size_t n) {
     for (size_t i = 0; i < n-1; i++) {
         for (size_t j = 0; j < n-i-1; j++) {
             if (arr[j] > arr[j+1]) {
@@ -164,8 +164,24 @@ void bubbleSort(size_t arr[], size_t arr2[], size_t n) {
     }
 }
 
+void bubbleSorty(size_t arr[], size_t arr2[], size_t n) {
+    for (size_t i = 0; i < n-1; i++) {
+        for (size_t j = 0; j < n-i-1; j++) {
+            if (arr2[j] > arr2[j+1]) {
+                swap(&arr[j], &arr[j+1]);
+                swap(&arr2[j], &arr2[j+1]);
+            }
+        }
+    }
+}
+
 int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys) {
-  bubbleSort(xs, ys, num_seats);
+  bubbleSorty(xs, ys, num_seats);
+  bubbleSortx(xs, ys, num_seats);
+  for(int k = 0; k < (int)num_seats; k++){
+    printf("(%ld,%ld)", xs[k], ys[k]);
+  }
+  printf("\n");
   //pthread_mutex_init(&mutex, NULL);
   //pthread_mutex_lock(&mutex);
   if (event_list == NULL) {
@@ -178,7 +194,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
   struct Event* event = get_event_with_delay(event_id);
 
   if (event == NULL) {
-    //fprintf(stderr, "Event not found\n");
+    fprintf(stderr, "Event not found\n");
     //pthread_mutex_unlock(&mutex);
     //pthread_mutex_destroy(&mutex);
     return 1;
@@ -193,14 +209,16 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
 
     if (row <= 0 || row > event->rows || col <= 0 || col > event->cols) {
       //fprintf(stderr, "Invalid seat\n");
-      break;
+      break;    
     }
+    pthread_mutex_lock(&event->lock_list[row - 1][col - 1]);
 
     if (*get_seat_with_delay(event, seat_index(event, row, col)) != 0) {
       //fprintf(stderr, "Seat already reserved\n");
       break;
     }
-    pthread_mutex_lock(&event->lock_list[row - 1][col - 1]);
+    
+    //printf("(%ld,%ld) dei lock com reservation_id: %d\n", row, col, reservation_id);
     *get_seat_with_delay(event, seat_index(event, row, col)) = reservation_id;
   }
 
@@ -209,6 +227,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
     event->reservations--;
     for (size_t j = 0; j < i; j++) {
       *get_seat_with_delay(event, seat_index(event, xs[j], ys[j])) = 0;
+      //printf("(%ld,%ld) tirei lock\n", xs[j], ys[j]);
       pthread_mutex_unlock(&event->lock_list[xs[j]-1][ys[j]-1]);
     }
     //pthread_mutex_unlock(&mutex);
@@ -216,6 +235,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
     return 1;
   }
   for (size_t j = 0; j < i; j++) {
+    //printf("(%ld,%ld) tirei lock\n", xs[j], ys[j]);
     pthread_mutex_unlock(&event->lock_list[xs[j]-1][ys[j]-1]);
   }
   return 0;
