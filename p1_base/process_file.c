@@ -136,6 +136,9 @@ void *process(void *arg)
       }else if((delay > 0) && (thread_index == (int)thread_id)){
         ems_wait(delay);
       }
+      else if(lock_thread && ((int)thread_id > max_threads || (int)thread_id < 0)){
+        fprintf(stderr, "Invalid thread index\n");
+      }
 
       break;
 
@@ -175,7 +178,7 @@ void *process(void *arg)
         close(fd);
         //printf("a linha é %ld\n", temp_current_line);
         
-        pthread_exit((int *)temp_current_line);
+        pthread_exit((void *)temp_current_line);
         break;
     case CMD_EMPTY:
       break;

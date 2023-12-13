@@ -147,7 +147,25 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
   return 0;
 }
 
+void swap(size_t* a, size_t* b) {
+    size_t temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void bubbleSort(size_t arr[], size_t arr2[], size_t n) {
+    for (size_t i = 0; i < n-1; i++) {
+        for (size_t j = 0; j < n-i-1; j++) {
+            if (arr[j] > arr[j+1]) {
+                swap(&arr[j], &arr[j+1]);
+                swap(&arr2[j], &arr2[j+1]);
+            }
+        }
+    }
+}
+
 int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys) {
+  bubbleSort(xs, ys, num_seats);
   //pthread_mutex_init(&mutex, NULL);
   //pthread_mutex_lock(&mutex);
   if (event_list == NULL) {
