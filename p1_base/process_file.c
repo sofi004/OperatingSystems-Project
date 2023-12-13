@@ -54,7 +54,6 @@ void *process(void *arg)
       char ch;
          while (read(fd, &ch, 1) == 1 && ch != '\n');
       continue;
-      //lock_thread = false;
     }    
     switch (get_next(fd))
     {
@@ -62,15 +61,15 @@ void *process(void *arg)
     case CMD_CREATE:
       if (parse_create(fd, &event_id, &num_rows, &num_columns) != 0)
       {
-        // fprintf(stderr, "Invalid command. See HELP for usage\n");
+        fprintf(stderr, "Invalid command. See HELP for usage\n");
         continue;
       }
-
+      pthread_mutex_lock(show_lock);
       if (lock_thread &&(ems_create(event_id, num_rows, num_columns)))
       {
-        // fprintf(stderr, "Failed to create event\n");
+        fprintf(stderr, "Failed to create event\n");
       }
-
+      pthread_mutex_unlock(show_lock);
       break;
 
     case CMD_RESERVE:
@@ -78,22 +77,21 @@ void *process(void *arg)
       
       if (num_coords == 0)
       {
-        // fprintf(stderr, "Invalid command. See HELP for usage\n");
+        fprintf(stderr, "Invalid command. See HELP for usage\n");
         continue;
       }
 
       if (lock_thread &&(ems_reserve(event_id, num_coords, xs, ys)))
       {
-        // fprintf(stderr, "Failed to reserve seats\n");
+        fprintf(stderr, "Failed to reserve seats\n");
       }
 
       break;
 
     case CMD_SHOW:
-      //printf("show a thread %d, está a executar a linha %d do ficheiro %s\n", thread_index, *temp_current_line, fd_name);
       if(parse_show(fd, &event_id) != 0){
       
-        // fprintf(stderr, "Invalid command. See HELP for usage\n");
+        fprintf(stderr, "Invalid command. See HELP for usage\n");
         continue;
       }
 
@@ -101,7 +99,7 @@ void *process(void *arg)
       {
         pthread_mutex_lock(show_lock);
         if(ems_show(event_id, thread_struct->fd_out)){
-        // fprintf(stderr, "Failed to show event\n");
+          fprintf(stderr, "Failed to show event\n");
         }
         pthread_mutex_unlock(show_lock);
       }
@@ -110,13 +108,11 @@ void *process(void *arg)
 
     case CMD_LIST_EVENTS:
     
-    
-    //printf("list a thread %d, está a executar a linha %d  do ficheiro %s\n", thread_index, *temp_current_line, fd_name);
       if (lock_thread)
       {
         pthread_mutex_lock(show_lock);
         if(ems_list_events(thread_struct->fd_out)){
-        // fprintf(stderr, "Failed to list events\n");
+        fprintf(stderr, "Failed to list events\n");
         }
         pthread_mutex_unlock(show_lock);
       }
@@ -128,7 +124,7 @@ void *process(void *arg)
       int return_parse = parse_wait(fd, &delay, &thread_id);
       if (return_parse == -1)
       { // thread_id is not implemented
-        // fprintf(stderr, "Invalid command. See HELP for usage\n");
+        fprintf(stderr, "Invalid command. See HELP for usage\n");
         continue;
       }else if((delay > 0) && (return_parse == 0)){
         ems_wait(delay);
@@ -143,7 +139,7 @@ void *process(void *arg)
       break;
 
     case CMD_INVALID:
-      // fprintf(stderr, "Invalid command. See HELP for usage\n");
+      fprintf(stderr, "Invalid command. See HELP for usage\n");
       break;
 
     case CMD_HELP:
@@ -173,10 +169,7 @@ void *process(void *arg)
       break;
 
     case CMD_BARRIER: // Not implemented
-      
-        //printf("Nome do ficheiro: %s, a thread %d entrei na barrier e a temp current line é %ld\n", fd_name, thread_index, temp_current_line);
         close(fd);
-        //printf("a linha é %ld\n", temp_current_line);
         
         pthread_exit((void *)temp_current_line);
         break;
@@ -186,8 +179,6 @@ void *process(void *arg)
     case EOC:
       close(fd);
       temp_current_line = 0;
-      
-      //printf("Sou a thread: %d, no ficheiro %s, com a linha %ld\n", thread_index, fd_name, temp_current_line );
       pthread_exit((void *)temp_current_line);
       break;
     }
