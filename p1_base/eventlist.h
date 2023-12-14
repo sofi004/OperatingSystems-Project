@@ -10,8 +10,7 @@ struct Event {
   
   size_t cols;  /// Number of columns.
   size_t rows;  /// Number of rows.
-  pthread_mutex_t **lock_list;
-
+  pthread_mutex_t event_lock;
   unsigned int* data;  /// Array of size rows * cols with the reservations for each seat.
 };
 
@@ -23,6 +22,7 @@ struct ListNode {
 
 // Linked list structure
 struct EventList {
+  pthread_rwlock_t list_lock;
   struct ListNode* head;  // Head of the list
   struct ListNode* tail;  // Tail of the list
 };

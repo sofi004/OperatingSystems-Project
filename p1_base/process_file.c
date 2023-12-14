@@ -64,12 +64,12 @@ void *process(void *arg)
         fprintf(stderr, "Invalid command. See HELP for usage\n");
         continue;
       }
-      pthread_mutex_lock(show_lock);
+      //pthread_mutex_lock(show_lock);
       if (lock_thread &&(ems_create(event_id, num_rows, num_columns)))
       {
         fprintf(stderr, "Failed to create event\n");
       }
-      pthread_mutex_unlock(show_lock);
+      //pthread_mutex_unlock(show_lock);
       break;
 
     case CMD_RESERVE:
