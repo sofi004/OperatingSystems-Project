@@ -110,8 +110,10 @@ void *process(void *arg) {
         fprintf(stderr, "Invalid command. See HELP for usage\n");
         continue;
       } else if((delay > 0) && (return_parse == 0)) {
+        printf("Waiting...\n");
         ems_wait(delay);
       } else if((delay > 0) && (thread_index == (int)thread_id)) {
+        printf("Waiting...\n");
         ems_wait(delay);
       } else if(lock_thread && ((int)thread_id > max_threads || (int)thread_id < 0)) {
         fprintf(stderr, "Invalid thread index\n");
