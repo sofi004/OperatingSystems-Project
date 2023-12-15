@@ -4,13 +4,12 @@
 #include <pthread.h>
 
 struct Thread_struct {
-  char fd_name[256];
+  char fd_name[MAX_RESERVATION_SIZE];
   int  fd_out;
   int  barrier_line;
   int  index;
   int  max_threads;
   pthread_mutex_t *shared_lock;
 };
-
 
 #endif
