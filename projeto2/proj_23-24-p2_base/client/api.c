@@ -1,7 +1,50 @@
 #include "api.h"
 
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
 int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const* server_pipe_path) {
   //TODO: create pipes and connect to the server
+  if (mkfifo(server_pipe_path, 0640) != 0) {
+        fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+  }
+
+  int tx = open(server_pipe_path, O_WRONLY);
+    if (tx == -1) {
+      fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+
+  int ret = write(tx, req_pipe_path, strlen(req_pipe_path));
+  if (ret < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+
+  ret = write(tx, resp_pipe_path, strlen(resp_pipe_path));
+  if (ret < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+
+  if (mkfifo(resp_pipe_path, 0640) != 0) {
+      fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  if (mkfifo(req_pipe_path, 0640) != 0) {
+      fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
   return 1;
 }
 
