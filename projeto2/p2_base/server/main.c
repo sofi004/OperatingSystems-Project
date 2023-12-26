@@ -42,25 +42,37 @@ int main(int argc, char* argv[]) {
   }
 
   //TODO: Intialize server, create worker threads
-  printf("%s\n", argv[1]);
-  int tx = open(argv[1], O_RDONLY);
-  if (tx == -1) {
-    fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
+  if (unlink(argv[1]) != 0 && errno != ENOENT) {
+    fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", argv[1],
+            strerror(errno));
     exit(EXIT_FAILURE);
   }
+
+  if (mkfifo(argv[1], 0640) != 0) {
+        fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+  }
+  int tx = open(argv[1], O_RDONLY);
+    if (tx == -1) {
+      fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  char buffer[128];
+  ssize_t ret = read(tx, buffer, 128);
+  if (ret == 0) {
+      // ret == 0 indicates EOF
+      fprintf(stderr, "[INFO]: pipe closed\n");
+  } else if (ret == -1) {
+      // ret == -1 indicates error
+      fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  printf("%s\n", buffer);
   while (1) {
     //TODO: Read from pipe
-    char buffer[128];
-    ssize_t ret = read(tx, buffer, 128);
-    if (ret == 0) {
-        // ret == 0 indicates EOF
-        fprintf(stderr, "[INFO]: pipe closed\n");
-    } else if (ret == -1) {
-        // ret == -1 indicates error
-        fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-    printf("%s", buffer);
+
+
+ 
     //TODO: Write new client to the producer-consumer buffer
   }
 
