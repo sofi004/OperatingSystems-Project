@@ -23,6 +23,7 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
   //strcat(temp_path, server_pipe_path);
   //printf("%s\n", temp_path);
   geral_pipe = open(server_pipe_path, O_WRONLY);
+  printf("passei o open do pipe geral\n");
   if (geral_pipe == -1) {
     fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
@@ -39,20 +40,6 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
-
-  //tratamento do resp_pipe_path
-  if (unlink(resp_pipe_path) != 0 && errno != ENOENT) {
-    fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", resp_pipe_path,
-            strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-  if (mkfifo(resp_pipe_path, 0640) != 0) {
-      fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
-      exit(EXIT_FAILURE);
-  }
-  response_pipe = open(resp_pipe_path, O_RDONLY);
-
-
   //tratamento do req_pipe_path
   if (unlink(req_pipe_path) != 0 && errno != ENOENT) {
     fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", req_pipe_path,
@@ -64,6 +51,26 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
       exit(EXIT_FAILURE);
   }
   request_pipe = open(req_pipe_path, O_WRONLY);
+  printf("passei o open do pipe de pedidos\n");
+
+
+  //tratamento do resp_pipe_path
+  printf("*");
+  printf("%s", resp_pipe_path);
+  printf("*\n");
+  if (unlink(resp_pipe_path) != 0 && errno != ENOENT) {
+    fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", resp_pipe_path,
+            strerror(errno));
+    exit(EXIT_FAILURE);
+  }
+  if (mkfifo(resp_pipe_path, 0640) != 0) {
+      fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  response_pipe = open(resp_pipe_path, O_RDONLY);
+  printf("passei o open do pipe de respostas\n");
+
+
   return 0;
 }
 
