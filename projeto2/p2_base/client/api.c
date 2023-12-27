@@ -11,6 +11,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+int geral_pipe;
+int response_pipe;
+int request_pipe;
 
 int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const* server_pipe_path) {
   //TODO: create pipes and connect to the server
@@ -19,19 +22,19 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
   //strcpy(temp_path, "/p2_base/server/");
   //strcat(temp_path, server_pipe_path);
   //printf("%s\n", temp_path);
-  int tx = open(server_pipe_path, O_WRONLY);
-  if (tx == -1) {
+  geral_pipe = open(server_pipe_path, O_WRONLY);
+  if (geral_pipe == -1) {
     fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
 
-  ssize_t ret = write(tx, req_pipe_path, strlen(req_pipe_path));
+  ssize_t ret = write(geral_pipe, req_pipe_path, strlen(req_pipe_path));
   if (ret < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
 
-  ret = write(tx, resp_pipe_path, strlen(resp_pipe_path));
+  ret = write(geral_pipe, resp_pipe_path, strlen(resp_pipe_path));
   if (ret < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
@@ -47,6 +50,8 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
       fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
+  response_pipe = open(resp_pipe_path, O_RDONLY);
+
 
   //tratamento do req_pipe_path
   if (unlink(req_pipe_path) != 0 && errno != ENOENT) {
@@ -58,16 +63,41 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
       fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
-  return 1;
+  request_pipe = open(req_pipe_path, O_WRONLY);
+  return 0;
 }
 
 int ems_quit(void) { 
   //TODO: close pipes
+  close(geral_pipe);
+  close(response_pipe);
+  close(request_pipe);
   return 1;
 }
 
-int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
+int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) { 
   //TODO: send create request to the server (through the request pipe) and wait for the response (through the response pipe)
+  ssize_t ret0 = write(request_pipe, 3, sizeof(int));
+  printf("%ld\n", ret0);
+  if (ret0 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  ssize_t ret1 = write(request_pipe, event_id, sizeof(event_id));
+  if (ret1 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  ssize_t ret2 = write(request_pipe, num_rows, sizeof(num_rows));
+  if (ret2 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  ssize_t ret3 = write(request_pipe, num_cols, sizeof(num_cols));
+  if (ret3 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
   return 1;
 }
 
