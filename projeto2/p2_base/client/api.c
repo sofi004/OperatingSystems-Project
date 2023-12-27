@@ -16,12 +16,6 @@ int response_pipe;
 int request_pipe;
 
 int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const* server_pipe_path) {
-  //TODO: create pipes and connect to the server
-  //tratamento do server_pipe
-  //char temp_path[128];
-  //strcpy(temp_path, "/p2_base/server/");
-  //strcat(temp_path, server_pipe_path);
-  //printf("%s\n", temp_path);
   geral_pipe = open(server_pipe_path, O_WRONLY);
   printf("passei o open do pipe geral\n");
   if (geral_pipe == -1) {
@@ -40,6 +34,7 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
+
   //tratamento do req_pipe_path
   if (unlink(req_pipe_path) != 0 && errno != ENOENT) {
     fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", req_pipe_path,
@@ -55,9 +50,6 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
 
 
   //tratamento do resp_pipe_path
-  printf("*");
-  printf("%s", resp_pipe_path);
-  printf("*\n");
   if (unlink(resp_pipe_path) != 0 && errno != ENOENT) {
     fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", resp_pipe_path,
             strerror(errno));
