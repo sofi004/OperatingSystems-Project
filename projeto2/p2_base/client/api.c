@@ -111,22 +111,28 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
-  ssize_t ret1 = write(request_pipe, event_id, sizeof(event_id));
+  memset(buffer, '\0', sizeof(buffer));
+  sprintf(buffer, "%d",event_id);
+  ssize_t ret1 = write(request_pipe, buffer, sizeof(buffer));
   if (ret1 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
-  ssize_t ret2 = write(request_pipe, num_rows, sizeof(num_rows));
+  memset(buffer, '\0', sizeof(buffer));
+  sprintf(buffer, "%ld",num_rows);
+  ssize_t ret2 = write(request_pipe, buffer, sizeof(buffer));
   if (ret2 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
-  ssize_t ret3 = write(request_pipe, num_cols, sizeof(num_cols));
+  memset(buffer, '\0', sizeof(buffer));
+  sprintf(buffer, "%ld",num_cols);
+  ssize_t ret3 = write(request_pipe, buffer, sizeof(buffer));
   if (ret3 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
-  return 1;
+  return 0;
 }
 
 int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys) {

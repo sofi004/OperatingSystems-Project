@@ -99,16 +99,17 @@ int main(int argc, char* argv[]) {
     memset(buffer, '\0', sizeof(buffer));
     // TODO: Read from pipe
     ssize_t ret = read(request, buffer, sizeof(buffer));
-    printf("ret :%ld\n", ret);
     op_code = atoi(buffer);
-    printf("op_code: %d\n", op_code);
     switch (op_code) {
         case 3:
             int event_id;
             size_t num_rows;
             size_t num_cols;
-            ssize_t ret0 = read(request, &event_id, sizeof(int));
-            printf("event_id: %d\n", event_id);
+            memset(buffer, '\0', sizeof(buffer));
+            ssize_t ret0 = read(request, buffer, sizeof(buffer));
+            event_id = atoi(buffer);
+
+            printf("event_id: %d %ld %s\n", event_id, ret0, buffer);
             if (ret0 == 0) {
                 // ret == 0 indicates EOF
                 fprintf(stderr, "[INFO]: pipe closed\n");
@@ -117,7 +118,9 @@ int main(int argc, char* argv[]) {
                 fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                 exit(EXIT_FAILURE);
             }
-            ssize_t ret1 = read(request, &num_rows, sizeof(size_t));
+            memset(buffer, '\0', sizeof(buffer));
+            ssize_t ret1 = read(request, buffer, sizeof(buffer));
+            num_rows = (size_t)atoi(buffer);
             printf("%ld\n", num_rows);
             if (ret1 == 0) {
                 // ret == 0 indicates EOF
@@ -127,7 +130,9 @@ int main(int argc, char* argv[]) {
                 fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                 exit(EXIT_FAILURE);
             }
-            ssize_t ret2 = read(request, &num_cols, sizeof(size_t));
+            memset(buffer, '\0', sizeof(buffer));
+            ssize_t ret2 = read(request, buffer, sizeof(buffer));
+            num_cols = (size_t)atoi(buffer);
             printf("%ld\n", num_cols);
             if (ret2 == 0) {
                 // ret == 0 indicates EOF
@@ -140,6 +145,8 @@ int main(int argc, char* argv[]) {
             if (ems_create(event_id, num_rows, num_cols)) 
                 fprintf(stderr, "Failed to create event\n");
             
+            break;
+        case 0:
             break;
         default:
             fprintf(stderr, "Unknown op_code: %d\n", op_code);
