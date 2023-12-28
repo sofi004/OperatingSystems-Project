@@ -95,16 +95,19 @@ int main(int argc, char* argv[]) {
   while (1) {
     sleep(1);
     int op_code;
+    char buffer[2];
+    memset(buffer, '\0', sizeof(buffer));
     // TODO: Read from pipe
-    ssize_t ret = read(request, op_code, sizeof(int));
+    ssize_t ret = read(request, buffer, sizeof(buffer));
     printf("ret :%ld\n", ret);
+    op_code = atoi(buffer);
     printf("op_code: %d\n", op_code);
     switch (op_code) {
         case 3:
             int event_id;
             size_t num_rows;
             size_t num_cols;
-            ssize_t ret0 = read(request, event_id, sizeof(int));
+            ssize_t ret0 = read(request, &event_id, sizeof(int));
             printf("event_id: %d\n", event_id);
             if (ret0 == 0) {
                 // ret == 0 indicates EOF

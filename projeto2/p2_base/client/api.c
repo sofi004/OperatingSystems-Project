@@ -60,8 +60,7 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
   //tratamento do req_pipe_path
 
   request_pipe = open(req_pipe_path, O_WRONLY);
-  printf("passei o open do pipe de pedidos\n");
-  printf("%s\n", resp_pipe_path);
+  printf("passei o open do pipe de pedidos e o id é %d\n", request_pipe);
 
   //mandar o nome pro servidor
   char buffer1[5];
@@ -103,7 +102,10 @@ int ems_quit(void) {
 int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) { 
   //TODO: send create request to the server (through the request pipe) and wait for the response (through the response pipe)
   int numero = 3;
-  ssize_t ret0 = write(request_pipe, numero, sizeof(int));
+  char buffer[2];
+  memset(buffer, '\0', sizeof(buffer));
+  sprintf(buffer, "%d",numero);
+  ssize_t ret0 = write(request_pipe, buffer, sizeof(buffer));
   printf("%ld\n", ret0);
   if (ret0 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
