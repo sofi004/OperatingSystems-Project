@@ -95,7 +95,6 @@ int main(int argc, char* argv[]) {
   while (1) {
     sleep(1);
     int op_code = 0;
-    char buffer[2];
     // TODO: Read from pipe
     ssize_t ret = read(request, &op_code, sizeof(op_code));
     switch (op_code) {
@@ -103,11 +102,9 @@ int main(int argc, char* argv[]) {
             int event_id;
             size_t num_rows;
             size_t num_cols;
-            memset(buffer, '\0', sizeof(buffer));
-            ssize_t ret0 = read(request, buffer, sizeof(buffer));
-            event_id = atoi(buffer);
+            ssize_t ret0 = read(request, &event_id, sizeof(event_id));
 
-            printf("event_id: %d %ld %s\n", event_id, ret0, buffer);
+            printf("event_id: %d %ld\n", event_id, ret0);
             if (ret0 == 0) {
                 // ret == 0 indicates EOF
                 fprintf(stderr, "[INFO]: pipe closed\n");
@@ -116,9 +113,7 @@ int main(int argc, char* argv[]) {
                 fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                 exit(EXIT_FAILURE);
             }
-            memset(buffer, '\0', sizeof(buffer));
-            ssize_t ret1 = read(request, buffer, sizeof(buffer));
-            num_rows = (size_t)atoi(buffer);
+            ssize_t ret1 = read(request, &num_rows, sizeof(num_rows));
             printf("%ld\n", num_rows);
             if (ret1 == 0) {
                 // ret == 0 indicates EOF
@@ -128,9 +123,7 @@ int main(int argc, char* argv[]) {
                 fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                 exit(EXIT_FAILURE);
             }
-            memset(buffer, '\0', sizeof(buffer));
-            ssize_t ret2 = read(request, buffer, sizeof(buffer));
-            num_cols = (size_t)atoi(buffer);
+            ssize_t ret2 = read(request, &num_cols, sizeof(num_cols));
             printf("%ld\n", num_cols);
             if (ret2 == 0) {
                 // ret == 0 indicates EOF
