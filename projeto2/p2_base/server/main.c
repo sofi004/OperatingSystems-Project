@@ -58,9 +58,11 @@ int main(int argc, char* argv[]) {
       exit(EXIT_FAILURE);
   }
   
-  char buffer1[3];
+  char buffer1[4];
+  memset(buffer1, '\0', sizeof(buffer1));
+
   //leitura do nome da pipe de pedidos
-  ssize_t ret = read(geral, &buffer1, 3);
+  ssize_t ret = read(geral, &buffer1, 4);
   if (ret == 0) {
       // ret == 0 indicates EOF
       fprintf(stderr, "[INFO]: pipe closed\n");
@@ -73,9 +75,10 @@ int main(int argc, char* argv[]) {
   int request = open(buffer1,O_RDONLY);
   printf("passei o open dos pedidos\n");
 
-  char buffer[4];
+  char buffer[5];
+  memset(buffer, '\0', sizeof(buffer));
   //leitura do nome da pipe de respostas
-  ssize_t ret1 = read(geral, &buffer, 4);
+  ssize_t ret1 = read(geral, &buffer, 5);
   if (ret1 == 0) {
       // ret == 0 indicates EOF
       fprintf(stderr, "[INFO]: pipe closed\n");
@@ -90,6 +93,7 @@ int main(int argc, char* argv[]) {
 
 
   while (1) {
+    sleep(1);
     int op_code;
     // TODO: Read from pipe
     ssize_t ret = read(request, op_code, sizeof(int));

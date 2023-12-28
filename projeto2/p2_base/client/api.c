@@ -16,49 +16,75 @@ int response_pipe;
 int request_pipe;
 
 int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const* server_pipe_path) {
+  if (unlink(req_pipe_path) != 0 && errno != ENOENT) {
+          fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", req_pipe_path,
+          strerror(errno));
+          exit(EXIT_FAILURE);
+  }
+  if (mkfifo(req_pipe_path, 0640) != 0) {
+      fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  if (unlink(resp_pipe_path) != 0 && errno != ENOENT) {
+          fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", resp_pipe_path,
+          strerror(errno));
+          exit(EXIT_FAILURE);
+  }
+  if (mkfifo(resp_pipe_path, 0640) != 0) {
+      fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
   geral_pipe = open(server_pipe_path, O_WRONLY);
   printf("passei o open do pipe geral\n");
   if (geral_pipe == -1) {
     fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
+  //mandar o nome pro servidor
+  char buffer0[4];
+  memset(buffer0, '\0', sizeof(buffer0));
+  strcpy(buffer0, req_pipe_path);
+  int len = strlen(buffer0);
+   int done = 0;
+   while (len > 0) {
+      ssize_t bytes_written = write(geral_pipe, buffer0 + done, len);
 
-  ssize_t ret = write(geral_pipe, req_pipe_path, strlen(req_pipe_path));
-  if (ret < 0) {
-      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
-      exit(EXIT_FAILURE);
-  }
+      if (bytes_written < 0){
+         fprintf(stderr, "write error: %s\n", strerror(errno));
+         return -1;
+      }
 
-  ret = write(geral_pipe, resp_pipe_path, strlen(resp_pipe_path));
-  if (ret < 0) {
-      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
-      exit(EXIT_FAILURE);
-  }
-
+      len -= bytes_written;
+      done += bytes_written;
+   }
   //tratamento do req_pipe_path
-  if (unlink(req_pipe_path) != 0 && errno != ENOENT) {
-    fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", req_pipe_path,
-            strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-  if (mkfifo(req_pipe_path, 0640) != 0) {
-      fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
-      exit(EXIT_FAILURE);
-  }
+
   request_pipe = open(req_pipe_path, O_WRONLY);
   printf("passei o open do pipe de pedidos\n");
+  printf("%s\n", resp_pipe_path);
+
+  //mandar o nome pro servidor
+  char buffer1[5];
+  memset(buffer1, '\0', sizeof(buffer1));
+  strcpy(buffer1, resp_pipe_path);
+  len = strlen(buffer1);
+  done = 0;
+  while (len > 0) {
+    ssize_t bytes_written = write(geral_pipe, buffer1 + done, len);
+
+    if (bytes_written < 0){
+        fprintf(stderr, "write error: %s\n", strerror(errno));
+        return -1;
+    }
+
+      len -= bytes_written;
+      done += bytes_written;
+   }
+
 
 
   //tratamento do resp_pipe_path
-  if (unlink(resp_pipe_path) != 0 && errno != ENOENT) {
-    fprintf(stderr, "[ERR]: unlink(%s) failed: %s\n", resp_pipe_path,
-            strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-  if (mkfifo(resp_pipe_path, 0640) != 0) {
-      fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
-      exit(EXIT_FAILURE);
-  }
+
   response_pipe = open(resp_pipe_path, O_RDONLY);
   printf("passei o open do pipe de respostas\n");
 
@@ -76,7 +102,8 @@ int ems_quit(void) {
 
 int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) { 
   //TODO: send create request to the server (through the request pipe) and wait for the response (through the response pipe)
-  ssize_t ret0 = write(request_pipe, 3, sizeof(int));
+  int numero = 3;
+  ssize_t ret0 = write(request_pipe, numero, sizeof(int));
   printf("%ld\n", ret0);
   if (ret0 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
