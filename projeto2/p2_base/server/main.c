@@ -94,12 +94,10 @@ int main(int argc, char* argv[]) {
 
   while (1) {
     sleep(1);
-    int op_code;
+    int op_code = 0;
     char buffer[2];
-    memset(buffer, '\0', sizeof(buffer));
     // TODO: Read from pipe
-    ssize_t ret = read(request, buffer, sizeof(buffer));
-    op_code = atoi(buffer);
+    ssize_t ret = read(request, &op_code, sizeof(op_code));
     switch (op_code) {
         case 3:
             int event_id;

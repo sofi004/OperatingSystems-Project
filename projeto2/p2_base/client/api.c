@@ -103,9 +103,9 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
   //TODO: send create request to the server (through the request pipe) and wait for the response (through the response pipe)
   int numero = 3;
   char buffer[2];
-  memset(buffer, '\0', sizeof(buffer));
-  sprintf(buffer, "%d",numero);
-  ssize_t ret0 = write(request_pipe, buffer, sizeof(buffer));
+  //memset(buffer, '\0', sizeof(buffer));
+  //sprintf(buffer, "%d",numero);
+  ssize_t ret0 = write(request_pipe, &numero, sizeof(numero));
   printf("%ld\n", ret0);
   if (ret0 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
