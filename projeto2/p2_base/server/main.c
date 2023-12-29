@@ -58,11 +58,21 @@ int main(int argc, char* argv[]) {
       exit(EXIT_FAILURE);
   }
   
-  char buffer1[4];
+  char buffer1[40];
   memset(buffer1, '\0', sizeof(buffer1));
 
   //leitura do nome da pipe de pedidos
-  ssize_t ret = read(geral, &buffer1, 4);
+  int name_len = 0;
+  ssize_t ret = read(geral, &name_len, sizeof(name_len));
+  if (ret == 0) {
+      // ret == 0 indicates EOF
+      fprintf(stderr, "[INFO]: pipe closed\n");
+  } else if (ret == -1) {
+    // ret == -1 indicates error
+    fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
+    exit(EXIT_FAILURE);
+  }
+  ret = read(geral, &buffer1, name_len);
   if (ret == 0) {
       // ret == 0 indicates EOF
       fprintf(stderr, "[INFO]: pipe closed\n");
@@ -75,10 +85,12 @@ int main(int argc, char* argv[]) {
   int request = open(buffer1,O_RDONLY);
   printf("passei o open dos pedidos\n");
 
-  char buffer[5];
+  char buffer[40];
   memset(buffer, '\0', sizeof(buffer));
   //leitura do nome da pipe de respostas
-  ssize_t ret1 = read(geral, &buffer, 5);
+  name_len = 0;
+  ssize_t ret1 = read(geral, &name_len, sizeof(name_len));
+  ret1 = read(geral, &buffer, name_len);
   if (ret1 == 0) {
       // ret == 0 indicates EOF
       fprintf(stderr, "[INFO]: pipe closed\n");
@@ -94,41 +106,39 @@ int main(int argc, char* argv[]) {
 
   while (1) {
     sleep(1);
+    int event_id;
     int op_code = 0;
     // TODO: Read from pipe
     ssize_t ret = read(request, &op_code, sizeof(op_code));
     switch (op_code) {
         case 3:
-            int event_id;
+            
             size_t num_rows;
             size_t num_cols;
-            ssize_t ret0 = read(request, &event_id, sizeof(event_id));
-
-            printf("event_id: %d %ld\n", event_id, ret0);
-            if (ret0 == 0) {
+            ssize_t ret3 = read(request, &event_id, sizeof(event_id));
+            printf("event_id: %d %ld\n", event_id, ret3);
+            if (ret3 == 0) {
                 // ret == 0 indicates EOF
                 fprintf(stderr, "[INFO]: pipe closed\n");
-            } else if (ret0 == -1) {
+            } else if (ret3 == -1) {
                 // ret == -1 indicates error
                 fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                 exit(EXIT_FAILURE);
             }
-            ssize_t ret1 = read(request, &num_rows, sizeof(num_rows));
-            printf("%ld\n", num_rows);
-            if (ret1 == 0) {
+            ret3 = read(request, &num_rows, sizeof(num_rows));
+            if (ret3 == 0) {
                 // ret == 0 indicates EOF
                 fprintf(stderr, "[INFO]: pipe closed\n");
-            } else if (ret1 == -1) {
+            } else if (ret3 == -1) {
                 // ret == -1 indicates error
                 fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                 exit(EXIT_FAILURE);
             }
-            ssize_t ret2 = read(request, &num_cols, sizeof(num_cols));
-            printf("%ld\n", num_cols);
-            if (ret2 == 0) {
+            ret3 = read(request, &num_cols, sizeof(num_cols));
+            if (ret3 == 0) {
                 // ret == 0 indicates EOF
                 fprintf(stderr, "[INFO]: pipe closed\n");
-            } else if (ret2 == -1) {
+            } else if (ret3 == -1) {
                 // ret == -1 indicates error
                 fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                 exit(EXIT_FAILURE);
@@ -136,6 +146,50 @@ int main(int argc, char* argv[]) {
             if (ems_create(event_id, num_rows, num_cols)) 
                 fprintf(stderr, "Failed to create event\n");
             
+            break;
+        case 4:
+            size_t num_seats;
+            size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
+            ssize_t ret4 = read(request, &event_id, sizeof(event_id));
+            if (ret4 < 0) {
+                fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            ret4 = read(request, &num_seats, sizeof(num_seats));
+            if (ret4 < 0) {
+                fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            //int xs_size = 256;
+            //ssize_t ret3 = read(request, &xs_size, xs_size);
+
+            ret4 = read(request, &xs, 256);
+            if (ret4 < 0) {
+                fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            ret4 = read(request, &ys, 256);
+            if (ret4 < 0) {
+                fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            if (ems_reserve(event_id, num_seats, xs, ys)) 
+                fprintf(stderr, "Failed to reserve seats\n");
+            break;
+        case 5:
+            int fd_out;
+            ssize_t ret5 = read(request, &event_id, sizeof(event_id));
+            if (ret4 < 0) {
+                fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            ret5 = read(request, &fd_out, sizeof(fd_out));
+            if (ret5 < 0) {
+                fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            if (ems_show(fd_out, event_id)) 
+                fprintf(stderr, "Failed to show event seats\n");
             break;
         case 0:
             break;

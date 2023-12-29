@@ -41,11 +41,12 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
     exit(EXIT_FAILURE);
   }
   //mandar o nome pro servidor
-  char buffer0[4];
+  char buffer0[40];
   memset(buffer0, '\0', sizeof(buffer0));
   strcpy(buffer0, req_pipe_path);
   int len = strlen(buffer0);
-   int done = 0;
+  int done = 0;
+  ssize_t ret = write(geral_pipe, &len, sizeof(len));
    while (len > 0) {
       ssize_t bytes_written = write(geral_pipe, buffer0 + done, len);
 
@@ -63,11 +64,12 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
   printf("passei o open do pipe de pedidos e o id é %d\n", request_pipe);
 
   //mandar o nome pro servidor
-  char buffer1[5];
+  char buffer1[40];
   memset(buffer1, '\0', sizeof(buffer1));
   strcpy(buffer1, resp_pipe_path);
   len = strlen(buffer1);
   done = 0;
+  ret = write(geral_pipe, &len, sizeof(len));
   while (len > 0) {
     ssize_t bytes_written = write(geral_pipe, buffer1 + done, len);
 
@@ -102,11 +104,8 @@ int ems_quit(void) {
 int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) { 
   //TODO: send create request to the server (through the request pipe) and wait for the response (through the response pipe)
   int numero = 3;
-  char buffer[2];
-  //memset(buffer, '\0', sizeof(buffer));
-  //sprintf(buffer, "%d",numero);
   ssize_t ret0 = write(request_pipe, &numero, sizeof(numero));
-  printf("%ld\n", ret0);
+  printf("%ld no create\n", ret0);
   if (ret0 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
@@ -132,12 +131,61 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
 
 int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys) {
   //TODO: send reserve request to the server (through the request pipe) and wait for the response (through the response pipe)
-  return 1;
+  int numero = 4;
+  ssize_t ret0 = write(request_pipe, &numero, sizeof(numero));
+  printf("%ld no reserve\n", ret0);
+  if (ret0 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  ssize_t ret1 = write(request_pipe, &event_id, sizeof(event_id));
+  if (ret1 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+
+  ssize_t ret2 = write(request_pipe, &num_seats, sizeof(num_seats));
+  if (ret2 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  //int xs_size = sizeof(xs);
+  //ssize_t ret3 = write(request_pipe, &xs_size, 256);
+  ssize_t ret3 = write(request_pipe, xs, 256);
+  if (ret3 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  //int ys_size = sizeof(ys);
+  //ssize_t ret3 = write(request_pipe, &ys_size, sizeof(ys_size));
+  ret3 = write(request_pipe, ys, 256);
+  if (ret3 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  return 0;
 }
 
 int ems_show(int out_fd, unsigned int event_id) {
   //TODO: send show request to the server (through the request pipe) and wait for the response (through the response pipe)
-  return 1;
+  int numero = 5;
+  ssize_t ret0 = write(request_pipe, &numero, sizeof(numero));
+  if (ret0 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  ssize_t ret1 = write(request_pipe, &event_id, sizeof(event_id));
+  if (ret1 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  printf("fd_out client: %d\n", out_fd);
+  ret1 = write(request_pipe, &out_fd, sizeof(out_fd));
+  if (ret1 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  return 0;
 }
 
 int ems_list_events(int out_fd) {

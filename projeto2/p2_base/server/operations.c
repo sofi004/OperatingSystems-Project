@@ -140,6 +140,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
   }
 
   for (size_t i = 0; i < num_seats; i++) {
+    printf("seat xs:%ld  ys:%ld\n", xs[i], ys[i]);
     if (xs[i] <= 0 || xs[i] > event->rows || ys[i] <= 0 || ys[i] > event->cols) {
       fprintf(stderr, "Seat out of bounds\n");
       pthread_mutex_unlock(&event->mutex);
@@ -197,7 +198,7 @@ int ems_show(int out_fd, unsigned int event_id) {
     fprintf(stderr, "Error locking mutex\n");
     return 1;
   }
-
+  printf("fd_out ems %d\n", out_fd);
   for (size_t i = 1; i <= event->rows; i++) {
     for (size_t j = 1; j <= event->cols; j++) {
       char buffer[16];
