@@ -198,7 +198,7 @@ int ems_show(int out_fd, unsigned int event_id) {
     fprintf(stderr, "Error locking mutex\n");
     return 1;
   }
-  printf("fd_out ems %d\n", out_fd);
+  printf("fd_out ems   %d\n", out_fd);
   for (size_t i = 1; i <= event->rows; i++) {
     for (size_t j = 1; j <= event->cols; j++) {
       char buffer[16];

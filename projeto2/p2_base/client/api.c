@@ -190,5 +190,16 @@ int ems_show(int out_fd, unsigned int event_id) {
 
 int ems_list_events(int out_fd) {
   //TODO: send list request to the server (through the request pipe) and wait for the response (through the response pipe)
-  return 1;
+  int numero = 6;
+  ssize_t ret0 = write(request_pipe, &numero, sizeof(numero));
+  if (ret0 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  ret0 = write(request_pipe, &out_fd, sizeof(out_fd));
+  if (ret0 < 0) {
+      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+      exit(EXIT_FAILURE);
+  }
+  return 0;
 }

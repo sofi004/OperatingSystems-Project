@@ -191,6 +191,16 @@ int main(int argc, char* argv[]) {
             if (ems_show(fd_out, event_id)) 
                 fprintf(stderr, "Failed to show event seats\n");
             break;
+        case 6:
+            int fd_out_list;
+            ssize_t ret6 = read(request, &fd_out_list, sizeof(fd_out_list));
+            if (ret6 < 0) {
+                fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            if (ems_list_events(fd_out)) 
+                fprintf(stderr, "Failed to list events\n");
+          break;
         case 0:
             break;
         default:
