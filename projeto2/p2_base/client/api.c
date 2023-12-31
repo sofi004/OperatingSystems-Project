@@ -40,13 +40,15 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
     fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
+  int op_code = 1;
+  ssize_t ret = write(geral_pipe, &op_code, sizeof(op_code));
   //mandar o nome pro servidor
   char buffer0[40];
   memset(buffer0, '\0', sizeof(buffer0));
   strcpy(buffer0, req_pipe_path);
   int len = strlen(buffer0);
   int done = 0;
-  ssize_t ret = write(geral_pipe, &len, sizeof(len));
+  ret = write(geral_pipe, &len, sizeof(len));
    while (len > 0) {
       ssize_t bytes_written = write(geral_pipe, buffer0 + done, len);
 

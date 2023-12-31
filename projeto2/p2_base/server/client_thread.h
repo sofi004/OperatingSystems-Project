@@ -3,6 +3,6 @@
 
 #include <stddef.h>
 
-void *client_thread(void *args);
+void *client_thread(void *arg);
 
 #endif
