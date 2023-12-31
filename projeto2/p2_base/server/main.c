@@ -105,14 +105,12 @@ int main(int argc, char* argv[]) {
 
 
   while (1) {
-    sleep(1);
     int event_id;
     int op_code = 0;
     // TODO: Read from pipe
     ssize_t ret = read(request, &op_code, sizeof(op_code));
     switch (op_code) {
         case 3:
-            
             size_t num_rows;
             size_t num_cols;
             ssize_t ret3 = read(request, &event_id, sizeof(event_id));
@@ -160,8 +158,6 @@ int main(int argc, char* argv[]) {
                 fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
                 exit(EXIT_FAILURE);
             }
-            //int xs_size = 256;
-            //ssize_t ret3 = read(request, &xs_size, xs_size);
 
             ret4 = read(request, &xs, 256);
             if (ret4 < 0) {
@@ -177,28 +173,17 @@ int main(int argc, char* argv[]) {
                 fprintf(stderr, "Failed to reserve seats\n");
             break;
         case 5:
-            int fd_out;
             ssize_t ret5 = read(request, &event_id, sizeof(event_id));
             if (ret4 < 0) {
                 fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
                 exit(EXIT_FAILURE);
             }
-            ret5 = read(request, &fd_out, sizeof(fd_out));
-            if (ret5 < 0) {
-                fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
-                exit(EXIT_FAILURE);
-            }
-            if (ems_show(fd_out, event_id)) 
+
+            if (ems_show(response, event_id)) 
                 fprintf(stderr, "Failed to show event seats\n");
             break;
         case 6:
-            int fd_out_list;
-            ssize_t ret6 = read(request, &fd_out_list, sizeof(fd_out_list));
-            if (ret6 < 0) {
-                fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
-                exit(EXIT_FAILURE);
-            }
-            if (ems_list_events(fd_out)) 
+            if (ems_list_events(response)) 
                 fprintf(stderr, "Failed to list events\n");
           break;
         case 0:

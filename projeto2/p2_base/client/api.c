@@ -149,15 +149,11 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
-  //int xs_size = sizeof(xs);
-  //ssize_t ret3 = write(request_pipe, &xs_size, 256);
   ssize_t ret3 = write(request_pipe, xs, 256);
   if (ret3 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
-  //int ys_size = sizeof(ys);
-  //ssize_t ret3 = write(request_pipe, &ys_size, sizeof(ys_size));
   ret3 = write(request_pipe, ys, 256);
   if (ret3 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
@@ -169,6 +165,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
 int ems_show(int out_fd, unsigned int event_id) {
   //TODO: send show request to the server (through the request pipe) and wait for the response (through the response pipe)
   int numero = 5;
+  size_t num_rows, num_cols;
   ssize_t ret0 = write(request_pipe, &numero, sizeof(numero));
   if (ret0 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
@@ -179,11 +176,47 @@ int ems_show(int out_fd, unsigned int event_id) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
-  printf("fd_out client: %d\n", out_fd);
-  ret1 = write(request_pipe, &out_fd, sizeof(out_fd));
+  ret1 = read(response_pipe, &num_rows, sizeof(size_t));
   if (ret1 < 0) {
-      fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
-      exit(EXIT_FAILURE);
+    fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+    exit(EXIT_FAILURE);
+  }
+  if(num_rows > 0){
+    ret1 = read(response_pipe, &num_cols, sizeof(size_t));
+    if (ret1 < 0) {
+        fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    printf("num_rows: %d, num_cols: %d\n", num_rows, num_cols);
+    int seat_index_list[num_rows][num_cols];
+    ret1 = read(response_pipe, &seat_index_list, sizeof(int)*(num_rows*num_cols));
+    if (ret1 < 0) {
+        fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    for (size_t i = 0; i < num_rows; i++) {
+        for (size_t j = 0; j < num_cols; j++) {
+        char buffer[16];
+        sprintf(buffer, "%u", seat_index_list[i][j]);
+
+        if (print_str(out_fd, buffer)) {
+            perror("Error writing to file descriptor");
+            return 1;
+        }
+
+        if (j < num_cols) {
+            if (print_str(out_fd, " ")) {
+            perror("Error writing to file descriptor");
+            return 1;
+            }
+        }
+        }
+
+        if (print_str(out_fd, "\n")) {
+        perror("Error writing to file descriptor");
+        return 1;
+        }
+    }
   }
   return 0;
 }
@@ -191,15 +224,32 @@ int ems_show(int out_fd, unsigned int event_id) {
 int ems_list_events(int out_fd) {
   //TODO: send list request to the server (through the request pipe) and wait for the response (through the response pipe)
   int numero = 6;
+  int event_counter;
   ssize_t ret0 = write(request_pipe, &numero, sizeof(numero));
   if (ret0 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
-  ret0 = write(request_pipe, &out_fd, sizeof(out_fd));
+  ret0 = read(response_pipe, &event_counter, sizeof(event_counter));
   if (ret0 < 0) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
+  }
+  if(event_counter == 0){
+    char buff[] = "No events\n";
+    if (print_str(out_fd, buff)) {
+      perror("Error writing to file descriptor");
+      return 1;
+    }
+    return 0;
+  }
+  int event_list[event_counter];
+  ret0 = read(response_pipe, &event_list, sizeof(event_list));
+  for (int i = 0; i < event_counter; i++) {
+    char buffer[25];
+    memset(buffer, '\0', 25);
+    sprintf(buffer, "Event: %d\n", event_list[i]);
+    ret0 = write(out_fd, buffer, strlen(buffer));
   }
   return 0;
 }
