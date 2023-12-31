@@ -95,6 +95,8 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
 
 int ems_quit(void) { 
   //TODO: close pipes
+  int numero = 2;
+  ssize_t ret0 = write(request_pipe, &numero, sizeof(numero));
   close(geral_pipe);
   close(response_pipe);
   close(request_pipe);
