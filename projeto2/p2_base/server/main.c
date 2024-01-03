@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
               exit(EXIT_FAILURE);
           }
           list_index++;
-          if(list_index > 8){
+          if(list_index > MAX_SESSION_COUNT){
             list_index = 0;
           }
             break;

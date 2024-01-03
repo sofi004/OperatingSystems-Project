@@ -60,11 +60,6 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
       len -= bytes_written;
       done += bytes_written;
    }
-  //tratamento do req_pipe_path
-
-  request_pipe = open(req_pipe_path, O_WRONLY);
-  printf("passei o open do pipe de pedidos e o id é %d\n", request_pipe);
-
   //mandar o nome pro servidor
   char buffer1[40];
   memset(buffer1, '\0', sizeof(buffer1));
@@ -85,8 +80,8 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
    }
 
 
-
-  //tratamento do resp_pipe_path
+  request_pipe = open(req_pipe_path, O_WRONLY);
+  printf("passei o open do pipe de pedidos e o id é %d\n", request_pipe);
 
   response_pipe = open(resp_pipe_path, O_RDONLY);
   printf("passei o open do pipe de respostas\n");

@@ -35,7 +35,7 @@ void *client_thread(void *arg) {
       memset(client_struct->path_list[client_struct->counter].resp_pipe_path, '\0', sizeof(client_struct->path_list[client_struct->counter].resp_pipe_path));
       printf("passei o segundo open, das respostas\n");
       client_struct->counter++;
-      if(client_struct->counter > 8){
+      if(client_struct->counter > MAX_SESSION_COUNT){
         client_struct->counter = 0;
       }
       pthread_mutex_unlock(&client_struct->shared_lock);
