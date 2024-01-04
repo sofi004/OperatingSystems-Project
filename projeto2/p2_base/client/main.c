@@ -75,7 +75,9 @@ int main(int argc, char* argv[]) {
           continue;
         }
 
-        if (ems_show(out_fd, event_id)) fprintf(stderr, "Failed to show event\n");
+        if (ems_show(out_fd, event_id)){
+          fprintf(stderr, "Failed to show event\n");
+        }
         break;
 
       case CMD_LIST_EVENTS:

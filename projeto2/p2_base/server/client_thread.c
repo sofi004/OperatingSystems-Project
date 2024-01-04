@@ -36,7 +36,7 @@ void *client_thread(void *arg) {
     printf("na thread: %p\n", &client_struct->signal_condition);
     printf("na thread: %p\n", &client_struct->head_lock);
 
-
+    printf("%s\n", client_struct->path_list[client_struct->counter].req_pipe_path);
     if(pthread_cond_wait(&client_struct->signal_condition, &client_struct->head_lock)){
         printf("deu asneira no wait\n");
     }
@@ -53,13 +53,11 @@ void *client_thread(void *arg) {
       memset(client_struct->path_list[client_struct->counter].resp_pipe_path, '\0', sizeof(client_struct->path_list[client_struct->counter].resp_pipe_path));
       printf("passei o segundo open, das respostas\n");
       client_struct->counter++;
-      if(client_struct->counter > MAX_SESSION_COUNT){
+      if(client_struct->counter >= MAX_SESSION_COUNT){
         client_struct->counter = 0;
       }
       pthread_mutex_unlock(&client_struct->head_lock);
-      if(pthread_cond_signal(&client_struct->add_condition)){
-        printf("deu asneira no wait\n");
-        }
+
       bool finish_file = false;
       while (1) {
         if(finish_file){
@@ -68,7 +66,14 @@ void *client_thread(void *arg) {
         int event_id;
         int op_code = 0;
         // TODO: Read from pipe
+        printf("antes do op_code: %d, request: %d\n", op_code, request);
         ssize_t ret = read(request, &op_code, sizeof(op_code));
+        if(ret == -1){
+            printf("error reading\n");
+        }else if(ret == 0){
+            printf("doesn't have anything to read\n");
+        }
+        printf("depois do op_code: %d\n", op_code);
         if (ret == 0) {
             // ret == 0 indicates EOF
             fprintf(stderr, "[INFO]: pipe closed\n");
@@ -147,7 +152,7 @@ void *client_thread(void *arg) {
                 break;
             case 5:
                 ssize_t ret5 = read(request, &event_id, sizeof(event_id));
-                if (ret4 < 0) {
+                if (ret5 < 0) {
                     fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
@@ -168,6 +173,9 @@ void *client_thread(void *arg) {
     
         //TODO: Write new client to the producer-consumer buffer
       }
+        if(pthread_cond_signal(&client_struct->add_condition)){
+            printf("deu asneira no wait\n");
+        }
     }else{
       pthread_mutex_unlock(&client_struct->head_lock);
     }

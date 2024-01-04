@@ -175,12 +175,15 @@ int ems_show(int out_fd, unsigned int event_id) {
       fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
+  printf("cheguei ao read\n");
   ret1 = read(response_pipe, &num_rows, sizeof(size_t));
   if (ret1 < 0) {
     fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
+  printf("passei o read: %d\n", num_rows);
   if(num_rows > 0){
+    printf("entrei no if\n");
     ret1 = read(response_pipe, &num_cols, sizeof(size_t));
     if (ret1 < 0) {
         fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
@@ -216,8 +219,10 @@ int ems_show(int out_fd, unsigned int event_id) {
         return 1;
         }
     }
+    return 0;
   }
-  return 0;
+  printf("cheguei ao return\n");
+  return 1;
 }
 
 int ems_list_events(int out_fd) {

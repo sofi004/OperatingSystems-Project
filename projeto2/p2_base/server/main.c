@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
         fprintf(stderr, "[ERR]: mkfifo failed: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
   }
-  int geral = open(argv[1], O_RDONLY);
+  int geral = open(argv[1], O_RDWR);
     if (geral == -1) {
       fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
@@ -125,7 +125,8 @@ int main(int argc, char* argv[]) {
 
   while(1) {
     if(flag == 1){
-      
+      printf("ola\n");
+      sig_show();
       flag = 0;
     }
     if(client_list.path_list[list_index].req_pipe_path[0] != '\0'){
@@ -138,8 +139,10 @@ int main(int argc, char* argv[]) {
         //fprintf(stderr, "[INFO]: pipe closed\n");
     } else if (ret == -1) {
         // ret == -1 indicates error
-        fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
-        exit(EXIT_FAILURE);
+        if(errno != EINTR){
+          fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
+          exit(EXIT_FAILURE);
+        }
     }
 
 
@@ -150,7 +153,7 @@ int main(int argc, char* argv[]) {
           //tratamento do request pipe
           int name_len = 0;
           pthread_mutex_lock(&client_list.tail_lock);
-          ssize_t ret = read(geral, &name_len, sizeof(name_len));
+          ret = read(geral, &name_len, sizeof(name_len));
           if (ret == 0) {
             // ret == 0 indicates EOF
             fprintf(stderr, "[INFO]: pipe closed\n");
@@ -186,10 +189,12 @@ int main(int argc, char* argv[]) {
               exit(EXIT_FAILURE);
           }
           tail++;
-          if(tail > MAX_SESSION_COUNT){
+          if(tail >= MAX_SESSION_COUNT){
             tail = 0;
           }
-
+          printf("meti o signal\n");
+          pthread_cond_signal(&client_list.signal_condition);
+          printf("passei o signal\n");
           if (((client_list.counter == 0) && tail == (MAX_SESSION_COUNT - 1)) || (client_list.counter - tail == 1)){
             printf("head: %d  tail: %d\n", client_list.counter, tail);
             if(pthread_cond_wait(&client_list.add_condition, &client_list.tail_lock)){
@@ -198,9 +203,7 @@ int main(int argc, char* argv[]) {
           }
 
           pthread_mutex_unlock(&client_list.tail_lock);
-          printf("meti o signal\n");
-          pthread_cond_signal(&client_list.signal_condition);
-          printf("passei o signal\n");
+
             break;
         default:
             fprintf(stderr, "Unknown op_code: %d\n", op_code);

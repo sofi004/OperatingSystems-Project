@@ -176,7 +176,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
 
 int ems_show(int response, unsigned int event_id) {
   ssize_t ret;
-  size_t erro = -1;
+  size_t erro = 0;
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
     ret = write(response, &erro, sizeof(size_t));
@@ -262,27 +262,29 @@ int ems_list_events(int response) {
   return 0;
 }
 
-static void sig_show(){
+void sig_show(){
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
-    return 1;
+    exit(EXIT_FAILURE);
   }
 
   struct ListNode* current = event_list->head;
-
+  printf("entrei\n");
   while (current != NULL) {
-    unsigned int* event_id = &(current->event)->id;
+    printf("entrei no while\n");
+    unsigned int* event_id = current->event->id;
     printf("Event: %d\n", event_id);
     for (size_t i = 1; i <= current->event->rows; i++) {
       for (size_t j = 1; j <= current->event->cols; j++) {
-        unsigned int* seat = get_seat_with_delay(current->event, seat_index(current->event, i, j));
+        unsigned int* seat = current->event->data[seat_index(current->event, i, j)];       
         printf("%d", seat);
         if (j < current->event->cols) {
           printf(" ");
         }
       }
       printf("\n");
-  }
+    }
     current = current->next;
-  }  
+  } 
+  printf("saí\n"); 
 }
