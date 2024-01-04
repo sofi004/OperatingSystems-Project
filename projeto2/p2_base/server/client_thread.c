@@ -24,9 +24,23 @@ void *client_thread(void *arg) {
 
 
   struct Client_struct *client_struct = (struct Client_struct *)arg;
-  while(1){
-    pthread_mutex_lock(&client_struct->shared_lock);
+  while (1){
+    if(pthread_mutex_lock(&client_struct->head_lock)){
+        printf("deu asneira\n");
+    }
+    printf("estou preso\n");
+    printf("na thread: %p\n", &client_struct->signal_condition);
+    printf("na thread: %p\n", &client_struct->head_lock);
+
+
+    if(pthread_cond_wait(&client_struct->signal_condition, &client_struct->head_lock)){
+        printf("deu asneira no wait\n");
+    }
+
+    printf("passei o wait\n");
+
     if(client_struct->path_list[client_struct->counter].req_pipe_path[0] != '\0'){
+      printf("estou a chegar aqui\n");
       int request = open(client_struct->path_list[client_struct->counter].req_pipe_path,O_RDONLY);
       printf("passei o open dos pedidos\n");
       memset(client_struct->path_list[client_struct->counter].req_pipe_path, '\0', sizeof(client_struct->path_list[client_struct->counter].req_pipe_path));
@@ -38,7 +52,10 @@ void *client_thread(void *arg) {
       if(client_struct->counter > MAX_SESSION_COUNT){
         client_struct->counter = 0;
       }
-      pthread_mutex_unlock(&client_struct->shared_lock);
+      pthread_mutex_unlock(&client_struct->head_lock);
+      if(pthread_cond_signal(&client_struct->add_condition)){
+        printf("deu asneira no wait\n");
+        }
       bool finish_file = false;
       while (1) {
         if(finish_file){
@@ -148,7 +165,7 @@ void *client_thread(void *arg) {
         //TODO: Write new client to the producer-consumer buffer
       }
     }else{
-      pthread_mutex_unlock(&client_struct->shared_lock);
+      pthread_mutex_unlock(&client_struct->head_lock);
     }
 
   }

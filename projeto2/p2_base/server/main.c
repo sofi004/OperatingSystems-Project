@@ -60,13 +60,26 @@ int main(int argc, char* argv[]) {
       fprintf(stderr, "[ERR]: open failed: %s\n", strerror(errno));
       exit(EXIT_FAILURE);
   }
-  pthread_mutex_t shared_lock;
-  pthread_mutex_init(&shared_lock, NULL);
+  pthread_mutex_t head_lock;
+  pthread_mutex_t tail_lock;
+  pthread_cond_t signal_condition;
+  pthread_cond_t add_condition;
   struct Client_struct client_list;
+  //substituir counter por tail e head para resolver problema de buffer cheio
+  client_list.head_lock = head_lock;
+  client_list.tail_lock = tail_lock;
+  client_list.counter = 0;
+  int tail = 0;
+  client_list.signal_condition = signal_condition;
+  client_list.add_condition = add_condition;
+  pthread_cond_init(&client_list.signal_condition, NULL);
+  pthread_cond_init(&client_list.add_condition, NULL);
+  pthread_mutex_init(&client_list.head_lock, NULL);
+  pthread_mutex_init(&client_list.tail_lock, NULL);
+  printf("na main: %p\n", &client_list.signal_condition);
+  printf("na main: %p\n", &client_list.head_lock);
   pthread_t th[MAX_SESSION_COUNT];
   for( int i = 0; i < MAX_SESSION_COUNT; i++){
-    client_list.counter = 0;
-    client_list.shared_lock = shared_lock;
     memset(client_list.path_list[i].req_pipe_path, '\0', sizeof(client_list.path_list[i].req_pipe_path));
     memset(client_list.path_list[i].resp_pipe_path, '\0', sizeof(client_list.path_list[i].resp_pipe_path));
     if(pthread_create(&th[i], NULL, &client_thread, (void *)&client_list) != 0){
@@ -75,8 +88,8 @@ int main(int argc, char* argv[]) {
     }
   }
   int list_index = 0;
+
   while(1) {
-    sleep(1);
     if(client_list.path_list[list_index].req_pipe_path[0] != '\0'){
       continue;
     }
@@ -84,18 +97,21 @@ int main(int argc, char* argv[]) {
     ssize_t ret = read(geral, &op_code, sizeof(op_code));
     if (ret == 0) {
         // ret == 0 indicates EOF
-        fprintf(stderr, "[INFO]: pipe closed\n");
+        //fprintf(stderr, "[INFO]: pipe closed\n");
     } else if (ret == -1) {
         // ret == -1 indicates error
         fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
     }
+
+
     switch (op_code) {
         case 0:
           break;
         case 1:
           //tratamento do request pipe
           int name_len = 0;
+          pthread_mutex_lock(&client_list.tail_lock);
           ssize_t ret = read(geral, &name_len, sizeof(name_len));
           if (ret == 0) {
             // ret == 0 indicates EOF
@@ -104,7 +120,7 @@ int main(int argc, char* argv[]) {
             // ret == -1 indicates error
             fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
           }
-          ret = read(geral, &client_list.path_list[list_index].req_pipe_path, name_len);
+          ret = read(geral, &client_list.path_list[tail].req_pipe_path, name_len);
           if (ret == 0) {
               // ret == 0 indicates EOF
               fprintf(stderr, "[INFO]: pipe closed\n");
@@ -122,7 +138,7 @@ int main(int argc, char* argv[]) {
             // ret == -1 indicates error
             fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
           }
-          ret = read(geral, &client_list.path_list[list_index].resp_pipe_path, name_len);
+          ret = read(geral, &client_list.path_list[tail].resp_pipe_path, name_len);
           if (ret == 0) {
               // ret == 0 indicates EOF
               fprintf(stderr, "[INFO]: pipe closed\n");
@@ -131,10 +147,22 @@ int main(int argc, char* argv[]) {
               fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
               exit(EXIT_FAILURE);
           }
-          list_index++;
-          if(list_index > MAX_SESSION_COUNT){
-            list_index = 0;
+          tail++;
+          if(tail > MAX_SESSION_COUNT){
+            tail = 0;
           }
+
+          if (((client_list.counter == 0) && tail == (MAX_SESSION_COUNT - 1)) || (client_list.counter - tail == 1)){
+            printf("head: %d  tail: %d\n", client_list.counter, tail);
+            if(pthread_cond_wait(&client_list.add_condition, &client_list.tail_lock)){
+                printf("deu asneira no wait\n");
+            }
+          }
+
+          pthread_mutex_unlock(&client_list.tail_lock);
+          printf("meti o signal\n");
+          pthread_cond_signal(&client_list.signal_condition);
+          printf("passei o signal\n");
             break;
         default:
             fprintf(stderr, "Unknown op_code: %d\n", op_code);

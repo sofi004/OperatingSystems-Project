@@ -11,7 +11,10 @@ struct Path_list {
 struct Client_struct {
   int counter;
   struct Path_list path_list[MAX_SESSION_COUNT];
-  pthread_mutex_t shared_lock;
+  pthread_mutex_t head_lock;
+  pthread_mutex_t tail_lock;
+  pthread_cond_t signal_condition;
+  pthread_cond_t add_condition;
 };
 
 
