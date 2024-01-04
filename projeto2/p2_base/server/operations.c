@@ -242,14 +242,16 @@ int ems_list_events(int response) {
   }
   printf("counter: %d\n", counter);
   ssize_t ret = write(response, &counter, sizeof(counter));
+  current = event_list->head;
   if(counter != 0){
     int event_list[counter];
     counter = 0;
     while (1) {
-      event_list[counter] = current->event->id;
-      if (current == to) {
+      if (current == NULL) {
         break;
       }
+      event_list[counter] = current->event->id;
+      printf("counter na lista: %d\n", current->event->id);
 
       current = current->next;
       counter++;
