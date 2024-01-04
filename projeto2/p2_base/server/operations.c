@@ -261,3 +261,28 @@ int ems_list_events(int response) {
   pthread_rwlock_unlock(&event_list->rwl);
   return 0;
 }
+
+static void sig_show(){
+  if (event_list == NULL) {
+    fprintf(stderr, "EMS state must be initialized\n");
+    return 1;
+  }
+
+  struct ListNode* current = event_list->head;
+
+  while (current != NULL) {
+    unsigned int* event_id = &(current->event)->id;
+    printf("Event: %d\n", event_id);
+    for (size_t i = 1; i <= current->event->rows; i++) {
+      for (size_t j = 1; j <= current->event->cols; j++) {
+        unsigned int* seat = get_seat_with_delay(current->event, seat_index(current->event, i, j));
+        printf("%d", seat);
+        if (j < current->event->cols) {
+          printf(" ");
+        }
+      }
+      printf("\n");
+  }
+    current = current->next;
+  }  
+}
