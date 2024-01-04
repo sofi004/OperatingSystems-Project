@@ -21,7 +21,11 @@
 #include "client_thread.h"
 
 void *client_thread(void *arg) {
-
+    
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGUSR1);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
 
   struct Client_struct *client_struct = (struct Client_struct *)arg;
   while (1){

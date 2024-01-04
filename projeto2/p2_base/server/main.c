@@ -20,7 +20,41 @@
 #include "client_thread.h"
 #include "common/client_struct.h"
 
+volatile sig_atomic_t flag = 0;
+
+static void sig_handler(int sig) {
+  /*
+  static int count = 0;
+
+  // UNSAFE: This handler uses non-async-signal-safe functions (printf(),
+  // exit();)
+  if (sig == SIGUSR1) {
+    // In some systems, after the handler call the signal gets reverted
+    // to SIG_DFL (the default action associated with the signal).
+    // So we set the signal handler back to our function after each trap.
+    //
+    if (signal(SIGUSR1, sig_handler) == SIG_ERR) {
+      exit(EXIT_FAILURE);
+    }
+    //aqui temos que fazer o chamamento do ems_show para cada um dos eventos.
+    count++;
+    fprintf(stderr, "Caught SIGUSR1(%d)\n", count);
+    return; // Resume execution at point of interruption
+  }
+  */
+  flag = 1;
+}
+
 int main(int argc, char* argv[]) {
+  /*
+  if (signal(SIGUSR1, sig_handler) == SIG_ERR) {
+    exit(EXIT_FAILURE);
+  }
+  */
+ struct sigaction S1;
+ S1.sa_sigaction = sig_handler;
+ sigaction(SIGUSR1, &S1, NULL);
+
   if (argc < 2 || argc > 3) {
     fprintf(stderr, "Usage: %s\n <pipe_path> [delay]\n", argv[0]);
     return 1;
@@ -90,6 +124,10 @@ int main(int argc, char* argv[]) {
   int list_index = 0;
 
   while(1) {
+    if(flag == 1){
+      
+      flag = 0;
+    }
     if(client_list.path_list[list_index].req_pipe_path[0] != '\0'){
       continue;
     }
