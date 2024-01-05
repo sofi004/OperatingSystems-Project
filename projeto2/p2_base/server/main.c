@@ -154,19 +154,8 @@ int main(int argc, char* argv[]) {
         case 0:
           break;
         case SETUP_CLIENT:
-          printf("entrou no setup\n");
-          //tratamento do request pipe
-          int name_len = 0;
           pthread_mutex_lock(&client_list.tail_lock);
-          ret = read(geral, &name_len, sizeof(name_len));
-          if (ret == 0) {
-            // ret == 0 indicates EOF
-            fprintf(stderr, "[INFO]: pipe closed\n");
-          } else if (ret == -1) {
-            // ret == -1 indicates error
-            fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
-          }
-          ret = read(geral, &client_list.path_list[tail].req_pipe_path, name_len);
+          ret = read(geral, &client_list.path_list[tail].req_pipe_path, BUFFER_SIZE);
           if (ret == 0) {
               // ret == 0 indicates EOF
               fprintf(stderr, "[INFO]: pipe closed\n");
@@ -177,15 +166,7 @@ int main(int argc, char* argv[]) {
           }
           printf("%s\n", client_list.path_list[tail].req_pipe_path);
           //tratamento do response pipe
-          ret = read(geral, &name_len, sizeof(name_len));
-          if (ret == 0) {
-            // ret == 0 indicates EOF
-            fprintf(stderr, "[INFO]: pipe closed\n");
-          } else if (ret == -1) {
-            // ret == -1 indicates error
-            fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
-          }
-          ret = read(geral, &client_list.path_list[tail].resp_pipe_path, name_len);
+          ret = read(geral, &client_list.path_list[tail].resp_pipe_path, BUFFER_SIZE);
           printf("%s\n", client_list.path_list[tail].resp_pipe_path);
           if (ret == 0) {
               // ret == 0 indicates EOF

@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include "common/constants.h"
 int geral_pipe;
 int response_pipe;
 int request_pipe;
@@ -47,12 +48,11 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
   ssize_t ret = write(geral_pipe, op_code, strlen(op_code) + 1);
   printf("depois do write do setup\n");
   //mandar o nome pro servidor
-  char buffer0[40];
+  char buffer0[BUFFER_SIZE];
   memset(buffer0, '\0', sizeof(buffer0));
   strcpy(buffer0, req_pipe_path);
-  int len = strlen(buffer0);
   int done = 0;
-  ret = write(geral_pipe, &len, sizeof(len));
+  int len = BUFFER_SIZE;
    while (len > 0) {
       ssize_t bytes_written = write(geral_pipe, buffer0 + done, len);
 
@@ -65,12 +65,11 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
       done += bytes_written;
    }
   //mandar o nome pro servidor
-  char buffer1[40];
+  char buffer1[BUFFER_SIZE];
   memset(buffer1, '\0', sizeof(buffer1));
   strcpy(buffer1, resp_pipe_path);
-  len = strlen(buffer1);
   done = 0;
-  ret = write(geral_pipe, &len, sizeof(len));
+  len = BUFFER_SIZE;
   while (len > 0) {
     ssize_t bytes_written = write(geral_pipe, buffer1 + done, len);
 

@@ -4,8 +4,8 @@
 #include <pthread.h>
 
 struct Path_list {
-  char resp_pipe_path[40];
-  char req_pipe_path[40];
+  char resp_pipe_path[BUFFER_SIZE];
+  char req_pipe_path[BUFFER_SIZE];
   int session_id;
 };
 
