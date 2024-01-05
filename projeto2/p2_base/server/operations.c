@@ -59,19 +59,24 @@ int ems_terminate() {
   return 0;
 }
 
-int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
+int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols, int response) {
+  int erro = 1;
+  ssize_t ret;
   if (event_list == NULL) {
+    ret = write(response, &erro, sizeof(int));
     fprintf(stderr, "EMS state must be initialized\n");
     return 1;
   }
 
   if (pthread_rwlock_wrlock(&event_list->rwl) != 0) {
+    ret = write(response, &erro, sizeof(int));
     fprintf(stderr, "Error locking list rwl\n");
     return 1;
   }
 
   if (get_event_with_delay(event_id, event_list->head, event_list->tail) != NULL) {
     fprintf(stderr, "Event already exists\n");
+    ret = write(response, &erro, sizeof(int));
     pthread_rwlock_unlock(&event_list->rwl);
     return 1;
   }
@@ -80,6 +85,7 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
 
   if (event == NULL) {
     fprintf(stderr, "Error allocating memory for event\n");
+    ret = write(response, &erro, sizeof(int));
     pthread_rwlock_unlock(&event_list->rwl);
     return 1;
   }
@@ -89,6 +95,7 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
   event->cols = num_cols;
   event->reservations = 0;
   if (pthread_mutex_init(&event->mutex, NULL) != 0) {
+    ret = write(response, &erro, sizeof(int));
     pthread_rwlock_unlock(&event_list->rwl);
     free(event);
     return 1;
@@ -97,6 +104,7 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
 
   if (event->data == NULL) {
     fprintf(stderr, "Error allocating memory for event data\n");
+    ret = write(response, &erro, sizeof(int));
     pthread_rwlock_unlock(&event_list->rwl);
     free(event);
     return 1;
@@ -104,23 +112,29 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
 
   if (append_to_list(event_list, event) != 0) {
     fprintf(stderr, "Error appending event to list\n");
+    ret = write(response, &erro, sizeof(int));
     pthread_rwlock_unlock(&event_list->rwl);
     free(event->data);
     free(event);
     return 1;
   }
-
+  erro = 0;
+  ret = write(response, &erro, sizeof(int));
   pthread_rwlock_unlock(&event_list->rwl);
   return 0;
 }
 
-int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys) {
+int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys, int response) {
+  ssize_t ret;
+  int erro = 1;
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
+    ret = write(response, &erro, sizeof(int));
     return 1;
   }
 
   if (pthread_rwlock_rdlock(&event_list->rwl) != 0) {
+    ret = write(response, &erro, sizeof(int));
     fprintf(stderr, "Error locking list rwl\n");
     return 1;
   }
@@ -130,11 +144,13 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
   pthread_rwlock_unlock(&event_list->rwl);
 
   if (event == NULL) {
+    ret = write(response, &erro, sizeof(int));
     fprintf(stderr, "Event not found\n");
     return 1;
   }
 
   if (pthread_mutex_lock(&event->mutex) != 0) {
+    ret = write(response, &erro, sizeof(int));
     fprintf(stderr, "Error locking mutex\n");
     return 1;
   }
@@ -142,6 +158,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
   for (size_t i = 0; i < num_seats; i++) {
     printf("seat xs:%ld  ys:%ld\n", xs[i], ys[i]);
     if (xs[i] <= 0 || xs[i] > event->rows || ys[i] <= 0 || ys[i] > event->cols) {
+      ret = write(response, &erro, sizeof(int));
       fprintf(stderr, "Seat out of bounds\n");
       pthread_mutex_unlock(&event->mutex);
       return 1;
@@ -155,6 +172,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
       }
 
       if (event->data[i] != 0) {
+        ret = write(response, &erro, sizeof(int));
         fprintf(stderr, "Seat already reserved\n");
         pthread_mutex_unlock(&event->mutex);
         return 1;
@@ -171,21 +189,23 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
   }
 
   pthread_mutex_unlock(&event->mutex);
+  erro = 0;
+  ret = write(response, &erro, sizeof(int));
   return 0;
 }
 
 int ems_show(int response, unsigned int event_id) {
   ssize_t ret;
-  size_t erro = 0;
+  int erro = 1;
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
-    ret = write(response, &erro, sizeof(size_t));
+    ret = write(response, &erro, sizeof(int));
     return 1;
   }
 
   if (pthread_rwlock_rdlock(&event_list->rwl) != 0) {
     fprintf(stderr, "Error locking list rwl\n");
-    ret = write(response, &erro, sizeof(size_t));
+    ret = write(response, &erro, sizeof(int));
     return 1;
   }
 
@@ -194,13 +214,13 @@ int ems_show(int response, unsigned int event_id) {
 
   if (event == NULL) {
     fprintf(stderr, "Event not found\n");
-    ret = write(response, &erro, sizeof(size_t));
+    ret = write(response, &erro, sizeof(int));
     return 1;
   }
 
   if (pthread_mutex_lock(&event->mutex) != 0) {
     fprintf(stderr, "Error locking mutex\n");
-    ret = write(response, &erro, sizeof(size_t));
+    ret = write(response, &erro, sizeof(int));
     return 1;
   }
   int seat_index_list[event->rows][event->cols];
@@ -210,6 +230,8 @@ int ems_show(int response, unsigned int event_id) {
       seat_index_list[i - 1][j - 1] = event->data[seat_index(event, i, j)];
     }
   }
+  erro = 0;
+  ret = write(response, &erro, sizeof(int));
   ret = write(response, &event->rows, sizeof(size_t));
   ret = write(response, &event->cols, sizeof(size_t));
   ret = write(response, &seat_index_list, sizeof(int)*(event->rows*event->cols));
@@ -219,13 +241,18 @@ int ems_show(int response, unsigned int event_id) {
 }
 
 int ems_list_events(int response) {
+  int erro = 1;
+  ssize_t ret;
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
+      ret = write(response, &erro, sizeof(int));
+
     return 1;
   }
 
   if (pthread_rwlock_rdlock(&event_list->rwl) != 0) {
     fprintf(stderr, "Error locking list rwl\n");
+    ret = write(response, &erro, sizeof(int));
     return 1;
   }
 
@@ -241,7 +268,9 @@ int ems_list_events(int response) {
     current = current->next;
   }
   printf("counter: %d\n", counter);
-  ssize_t ret = write(response, &counter, sizeof(counter));
+  erro = 0;
+  ret = write(response, &erro, sizeof(int));
+  ret = write(response, &counter, sizeof(counter));
   current = event_list->head;
   if(counter != 0){
     int event_list[counter];

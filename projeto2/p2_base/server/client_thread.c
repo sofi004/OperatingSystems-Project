@@ -56,6 +56,8 @@ void *client_thread(void *arg) {
       if(client_struct->counter >= MAX_SESSION_COUNT){
         client_struct->counter = 0;
       }
+      printf("session_id: %d", client_struct->path_list[client_struct->counter].session_id);
+      ssize_t ret = write(response, &client_struct->path_list[client_struct->counter].session_id, sizeof(int));
       pthread_mutex_unlock(&client_struct->head_lock);
 
       bool finish_file = false;
@@ -83,12 +85,12 @@ void *client_thread(void *arg) {
             exit(EXIT_FAILURE);
         }
         switch (op_code) {
-            case 2:
+            case QUIT_CLIENT:
                 close(response);
                 close(request);
                 finish_file = true;
                 break;
-            case 3:
+            case CREATE_EVENT:
                 size_t num_rows;
                 size_t num_cols;
                 ssize_t ret3 = read(request, &event_id, sizeof(event_id));
@@ -119,11 +121,11 @@ void *client_thread(void *arg) {
                     fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
-                if (ems_create(event_id, num_rows, num_cols)) 
+                if (ems_create(event_id, num_rows, num_cols, response)) 
                     fprintf(stderr, "Failed to create event\n");
                 
                 break;
-            case 4:
+            case RESERVE_SEATS:
                 size_t num_seats;
                 size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
                 ssize_t ret4 = read(request, &event_id, sizeof(event_id));
@@ -147,10 +149,10 @@ void *client_thread(void *arg) {
                     fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
-                if (ems_reserve(event_id, num_seats, xs, ys)) 
+                if (ems_reserve(event_id, num_seats, xs, ys, response)) 
                     fprintf(stderr, "Failed to reserve seats\n");
                 break;
-            case 5:
+            case SHOW_EVENT:
                 ssize_t ret5 = read(request, &event_id, sizeof(event_id));
                 if (ret5 < 0) {
                     fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
@@ -160,7 +162,7 @@ void *client_thread(void *arg) {
                 if (ems_show(response, event_id)) 
                     fprintf(stderr, "Failed to show event seats\n");
                 break;
-            case 6:
+            case LIST_EVENTS:
                 if (ems_list_events(response)) 
                     fprintf(stderr, "Failed to list events\n");
               break;

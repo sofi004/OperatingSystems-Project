@@ -6,6 +6,7 @@
 struct Path_list {
   char resp_pipe_path[40];
   char req_pipe_path[40];
+  int session_id;
 };
 
 struct Client_struct {

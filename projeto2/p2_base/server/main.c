@@ -21,6 +21,7 @@
 #include "common/client_struct.h"
 
 volatile sig_atomic_t flag = 0;
+int session_counter = 0;
 
 static void sig_handler(int sig) {
   /*
@@ -149,7 +150,7 @@ int main(int argc, char* argv[]) {
     switch (op_code) {
         case 0:
           break;
-        case 1:
+        case SETUP_CLIENT:
           //tratamento do request pipe
           int name_len = 0;
           pthread_mutex_lock(&client_list.tail_lock);
@@ -188,6 +189,8 @@ int main(int argc, char* argv[]) {
               fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
               exit(EXIT_FAILURE);
           }
+          client_list.path_list[tail].session_id = session_counter;
+          session_counter++;
           tail++;
           if(tail >= MAX_SESSION_COUNT){
             tail = 0;
