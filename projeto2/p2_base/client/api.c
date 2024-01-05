@@ -87,9 +87,7 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
   printf("passei o open do pipe de respostas\n");
   int session_id = -1;
 
-  ret = read(resp_pipe_path, &session_id, sizeof(int));
-
-  printf("session id: %d\n", session_id);
+  ret = read(response_pipe, &session_id, sizeof(int));
   return session_id;
 }
 

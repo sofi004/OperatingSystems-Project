@@ -56,8 +56,7 @@ void *client_thread(void *arg) {
       if(client_struct->counter >= MAX_SESSION_COUNT){
         client_struct->counter = 0;
       }
-      printf("session_id: %d", client_struct->path_list[client_struct->counter].session_id);
-      ssize_t ret = write(response, &client_struct->path_list[client_struct->counter].session_id, sizeof(int));
+      ssize_t ret = write(response, &client_struct->counter, sizeof(int));
       pthread_mutex_unlock(&client_struct->head_lock);
 
       bool finish_file = false;
