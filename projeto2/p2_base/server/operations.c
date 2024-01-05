@@ -273,19 +273,19 @@ int ems_list_events(int response) {
   ret = write(response, &counter, sizeof(counter));
   current = event_list->head;
   if(counter != 0){
-    int event_list[counter];
+    int events_list[counter];
     counter = 0;
     while (1) {
       if (current == NULL) {
         break;
       }
-      event_list[counter] = current->event->id;
+      events_list[counter] = (int)current->event->id;
       printf("counter na lista: %d\n", current->event->id);
 
       current = current->next;
       counter++;
     }
-    ret = write(response, &event_list, sizeof(event_list));
+    ret = write(response, &events_list, sizeof(events_list));
   }
   pthread_rwlock_unlock(&event_list->rwl);
   return 0;
@@ -302,11 +302,11 @@ void sig_show(){
   while (current != NULL) {
     printf("entrei no while\n");
     unsigned int* event_id = current->event->id;
-    printf("Event: %d\n", event_id);
+    printf("Event: %ls\n", event_id);
     for (size_t i = 1; i <= current->event->rows; i++) {
       for (size_t j = 1; j <= current->event->cols; j++) {
         unsigned int* seat = current->event->data[seat_index(current->event, i, j)];       
-        printf("%d", seat);
+        printf("%ls", seat);
         if (j < current->event->cols) {
           printf(" ");
         }

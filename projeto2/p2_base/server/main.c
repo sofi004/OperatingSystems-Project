@@ -22,35 +22,11 @@
 
 volatile sig_atomic_t flag = 0;
 
-static void sig_handler(int sig) {
-  /*
-  static int count = 0;
-
-  // UNSAFE: This handler uses non-async-signal-safe functions (printf(),
-  // exit();)
-  if (sig == SIGUSR1) {
-    // In some systems, after the handler call the signal gets reverted
-    // to SIG_DFL (the default action associated with the signal).
-    // So we set the signal handler back to our function after each trap.
-    //
-    if (signal(SIGUSR1, sig_handler) == SIG_ERR) {
-      exit(EXIT_FAILURE);
-    }
-    //aqui temos que fazer o chamamento do ems_show para cada um dos eventos.
-    count++;
-    fprintf(stderr, "Caught SIGUSR1(%d)\n", count);
-    return; // Resume execution at point of interruption
-  }
-  */
+static void sig_handler() {
   flag = 1;
 }
 
 int main(int argc, char* argv[]) {
-  /*
-  if (signal(SIGUSR1, sig_handler) == SIG_ERR) {
-    exit(EXIT_FAILURE);
-  }
-  */
  struct sigaction S1;
  S1.sa_sigaction = sig_handler;
  sigaction(SIGUSR1, &S1, NULL);
@@ -194,7 +170,7 @@ int main(int argc, char* argv[]) {
 
             break;
         default:
-            fprintf(stderr, "Unknown op_code: %d\n", op_code);
+            fprintf(stderr, "Unknown op_code: %d\n", int_op_code);
             break;  
     }
   }

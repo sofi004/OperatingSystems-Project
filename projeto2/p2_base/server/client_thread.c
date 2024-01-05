@@ -169,7 +169,7 @@ void *client_thread(void *arg) {
             case 0:
                 break;
             default:
-                fprintf(stderr, "Unknown op_code: %d\n", op_code);
+                fprintf(stderr, "Unknown op_code: %d\n", int_op_code);
                 break;
           }
     
