@@ -18,5 +18,4 @@ struct Client_struct {
   pthread_cond_t add_condition;
 };
 
-
 #endif
