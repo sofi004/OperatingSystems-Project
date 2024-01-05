@@ -156,7 +156,6 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys,
   }
 
   for (size_t i = 0; i < num_seats; i++) {
-    printf("seat xs:%ld  ys:%ld\n", xs[i], ys[i]);
     if (xs[i] <= 0 || xs[i] > event->rows || ys[i] <= 0 || ys[i] > event->cols) {
       ret = write(response, &erro, sizeof(int));
       fprintf(stderr, "Seat out of bounds\n");
@@ -235,7 +234,6 @@ int ems_show(int response, unsigned int event_id) {
   ret = write(response, &event->rows, sizeof(size_t));
   ret = write(response, &event->cols, sizeof(size_t));
   ret = write(response, &seat_index_list, sizeof(int)*(event->rows*event->cols));
-  printf("fiz o write\n");
   pthread_mutex_unlock(&event->mutex);
   return 0;
 }
@@ -267,7 +265,6 @@ int ems_list_events(int response) {
     }
     current = current->next;
   }
-  printf("counter: %d\n", counter);
   erro = 0;
   ret = write(response, &erro, sizeof(int));
   ret = write(response, &counter, sizeof(counter));
@@ -280,7 +277,6 @@ int ems_list_events(int response) {
         break;
       }
       events_list[counter] = (int)current->event->id;
-      printf("counter na lista: %d\n", current->event->id);
 
       current = current->next;
       counter++;
@@ -298,9 +294,7 @@ void sig_show(){
   }
 
   struct ListNode* current = event_list->head;
-  printf("entrei\n");
   while (current != NULL) {
-    printf("entrei no while\n");
     unsigned int* event_id = current->event->id;
     printf("Event: %ls\n", event_id);
     for (size_t i = 1; i <= current->event->rows; i++) {
@@ -315,5 +309,4 @@ void sig_show(){
     }
     current = current->next;
   } 
-  printf("saí\n"); 
 }

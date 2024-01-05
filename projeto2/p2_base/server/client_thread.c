@@ -21,7 +21,6 @@
 #include "client_thread.h"
 
 void *client_thread(void *arg) {
-    
     sigset_t set;
     sigemptyset(&set);
     sigaddset(&set, SIGUSR1);
@@ -29,29 +28,15 @@ void *client_thread(void *arg) {
 
   struct Client_struct *client_struct = (struct Client_struct *)arg;
   while (1){
-    if(pthread_mutex_lock(&client_struct->head_lock)){
-        printf("deu asneira\n");
-    }
-    printf("estou preso\n");
-    printf("na thread: %p\n", &client_struct->signal_condition);
-    printf("na thread: %p\n", &client_struct->head_lock);
-
-    printf("%s\n", client_struct->path_list[client_struct->counter].req_pipe_path);
+    pthread_mutex_lock(&client_struct->head_lock);
     if(pthread_cond_wait(&client_struct->signal_condition, &client_struct->head_lock)){
-        printf("deu asneira no wait\n");
+        printf("Failed to wait in a thread\n");
     }
-
-    printf("passei o wait\n");
-
     if(client_struct->path_list[client_struct->counter].req_pipe_path[0] != '\0'){
-      printf("estou a chegar aqui\n");
       int request = open(client_struct->path_list[client_struct->counter].req_pipe_path,O_RDONLY);
-      printf("passei o open dos pedidos\n");
       memset(client_struct->path_list[client_struct->counter].req_pipe_path, '\0', sizeof(client_struct->path_list[client_struct->counter].req_pipe_path));
-
       int response = open(client_struct->path_list[client_struct->counter].resp_pipe_path, O_WRONLY);
       memset(client_struct->path_list[client_struct->counter].resp_pipe_path, '\0', sizeof(client_struct->path_list[client_struct->counter].resp_pipe_path));
-      printf("passei o segundo open, das respostas\n");
       client_struct->counter++;
       if(client_struct->counter >= MAX_SESSION_COUNT){
         client_struct->counter = 0;
@@ -66,24 +51,27 @@ void *client_thread(void *arg) {
         }
         int event_id;
         char op_code [2];
-        // TODO: Read from pipe
-        printf("antes do read do client thread\n");
         ssize_t ret = read(request, &op_code, sizeof(op_code));
+        if (ret == -1) {
+            // ret == -1 indicates error
+            fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
         op_code[ret] = '\0';
-        printf("depois do read do client thread\n");
         if (ret == 0) {
-            // ret == 0 indicates EOF
             fprintf(stderr, "[INFO]: pipe closed\n");
         } else if (ret == -1) {
-            // ret == -1 indicates error
             fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
         int session_id;
         ret = read(request, &session_id, sizeof(int));
-        printf("string op code: %s\n", op_code);
+        if (ret == -1) {
+            // ret == -1 indicates error
+            fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
         int int_op_code = atoi(op_code);
-        printf("int op code: %d\n", int_op_code);
         switch (int_op_code) {
             case QUIT_CLIENT:
                 close(response);
@@ -94,29 +82,19 @@ void *client_thread(void *arg) {
                 size_t num_rows;
                 size_t num_cols;
                 ssize_t ret3 = read(request, &event_id, sizeof(event_id));
-                printf("event_id: %d %ld\n", event_id, ret3);
-                if (ret3 == 0) {
-                    // ret == 0 indicates EOF
-                    fprintf(stderr, "[INFO]: pipe closed\n");
-                } else if (ret3 == -1) {
+                if (ret3 == -1) {
                     // ret == -1 indicates error
                     fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
                 ret3 = read(request, &num_rows, sizeof(num_rows));
-                if (ret3 == 0) {
-                    // ret == 0 indicates EOF
-                    fprintf(stderr, "[INFO]: pipe closed\n");
-                } else if (ret3 == -1) {
+                if (ret3 == -1) {
                     // ret == -1 indicates error
                     fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
                 ret3 = read(request, &num_cols, sizeof(num_cols));
-                if (ret3 == 0) {
-                    // ret == 0 indicates EOF
-                    fprintf(stderr, "[INFO]: pipe closed\n");
-                } else if (ret3 == -1) {
+                if (ret3 == -1) {
                     // ret == -1 indicates error
                     fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                     exit(EXIT_FAILURE);
@@ -129,24 +107,28 @@ void *client_thread(void *arg) {
                 size_t num_seats;
                 size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
                 ssize_t ret4 = read(request, &event_id, sizeof(event_id));
-                if (ret4 < 0) {
-                    fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                if (ret4 == -1) {
+                    // ret == -1 indicates error
+                    fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
                 ret4 = read(request, &num_seats, sizeof(num_seats));
-                if (ret4 < 0) {
-                    fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                if (ret4 == -1) {
+                    // ret == -1 indicates error
+                    fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
 
                 ret4 = read(request, &xs, 256);
-                if (ret4 < 0) {
-                    fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                if (ret4 == -1) {
+                    // ret == -1 indicates error
+                    fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
                 ret4 = read(request, &ys, 256);
-                if (ret4 < 0) {
-                    fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                if (ret4 == -1) {
+                    // ret == -1 indicates error
+                    fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
                 if (ems_reserve(event_id, num_seats, xs, ys, response)) 
@@ -154,13 +136,14 @@ void *client_thread(void *arg) {
                 break;
             case SHOW_EVENT:
                 ssize_t ret5 = read(request, &event_id, sizeof(event_id));
-                if (ret5 < 0) {
-                    fprintf(stderr, "[ERR]: write failed: %s\n", strerror(errno));
+                if (ret5 == -1) {
+                    // ret == -1 indicates error
+                    fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
                     exit(EXIT_FAILURE);
                 }
-
                 if (ems_show(response, event_id)) 
                     fprintf(stderr, "Failed to show event seats\n");
+
                 break;
             case LIST_EVENTS:
                 if (ems_list_events(response)) 
@@ -175,12 +158,11 @@ void *client_thread(void *arg) {
     
         //TODO: Write new client to the producer-consumer buffer
       }
-        if(pthread_cond_signal(&client_struct->add_condition)){
-            printf("deu asneira no wait\n");
-        }
+    if(pthread_cond_signal(&client_struct->add_condition)){
+        printf("Failed to signal\n");
+    }
     }else{
       pthread_mutex_unlock(&client_struct->head_lock);
     }
-
   }
 }
