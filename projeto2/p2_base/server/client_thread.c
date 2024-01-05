@@ -42,6 +42,11 @@ void *client_thread(void *arg) {
         client_struct->counter = 0;
       }
       ssize_t ret = write(response, &client_struct->counter, sizeof(int));
+      if (ret == -1) {
+        // ret == -1 indicates error
+        fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
+        exit(EXIT_FAILURE);
+        }
       pthread_mutex_unlock(&client_struct->head_lock);
 
       bool finish_file = false;
@@ -51,7 +56,7 @@ void *client_thread(void *arg) {
         }
         int event_id;
         char op_code [2];
-        ssize_t ret = read(request, &op_code, sizeof(op_code));
+        ret = read(request, &op_code, sizeof(op_code));
         if (ret == -1) {
             // ret == -1 indicates error
             fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));

@@ -30,7 +30,8 @@ int main(int argc, char* argv[]) {
  struct sigaction S1;
  S1.sa_sigaction = sig_handler;
  sigaction(SIGUSR1, &S1, NULL);
-
+  /*raise(SIGUSR1);
+  return 0;*/
   if (argc < 2 || argc > 3) {
     fprintf(stderr, "Usage: %s\n <pipe_path> [delay]\n", argv[0]);
     return 1;
@@ -107,10 +108,12 @@ int main(int argc, char* argv[]) {
     }
     char op_code[2];
     ssize_t ret = read(geral, &op_code, sizeof(op_code));
-    if (ret == -1) {
+    if (ret < 0) {
         // ret == -1 indicates error
+      if(errno != EINTR){
         fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
         exit(EXIT_FAILURE);
+      }
     }
     op_code[ret] = '\0';
     int int_op_code = atoi(op_code);

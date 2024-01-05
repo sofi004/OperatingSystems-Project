@@ -292,7 +292,7 @@ void sig_show(){
     fprintf(stderr, "EMS state must be initialized\n");
     exit(EXIT_FAILURE);
   }
-
+  printf("entrie no sigshow\n");
   struct ListNode* current = event_list->head;
   while (current != NULL) {
     unsigned int* event_id = current->event->id;
