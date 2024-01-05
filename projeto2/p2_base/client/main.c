@@ -7,8 +7,6 @@
 #include "common/constants.h"
 #include "parser.h"
 
-int session_id;
-
 int main(int argc, char* argv[]) {
   if (argc < 5) {
     fprintf(stderr, "Usage: %s <request pipe path> <response pipe path> <server pipe path> <.jobs file path>\n",
@@ -16,8 +14,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   
-  session_id = ems_setup(argv[1], argv[2], argv[3]);
-  if(session_id == -1) {
+  if(ems_setup(argv[1], argv[2], argv[3])) {
     fprintf(stderr, "Failed to set up EMS\n");
     return 1;
   }

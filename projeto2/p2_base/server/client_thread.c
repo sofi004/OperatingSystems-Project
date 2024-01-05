@@ -65,16 +65,12 @@ void *client_thread(void *arg) {
           break;
         }
         int event_id;
-        int op_code = 0;
+        char op_code [2];
         // TODO: Read from pipe
-        printf("antes do op_code: %d, request: %d\n", op_code, request);
+        printf("antes do read do client thread\n");
         ssize_t ret = read(request, &op_code, sizeof(op_code));
-        if(ret == -1){
-            printf("error reading\n");
-        }else if(ret == 0){
-            printf("doesn't have anything to read\n");
-        }
-        printf("depois do op_code: %d\n", op_code);
+        op_code[ret] = '\0';
+        printf("depois do read do client thread\n");
         if (ret == 0) {
             // ret == 0 indicates EOF
             fprintf(stderr, "[INFO]: pipe closed\n");
@@ -83,7 +79,12 @@ void *client_thread(void *arg) {
             fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
             exit(EXIT_FAILURE);
         }
-        switch (op_code) {
+        int session_id;
+        ret = read(request, &session_id, sizeof(int));
+        printf("string op code: %s\n", op_code);
+        int int_op_code = atoi(op_code);
+        printf("int op code: %d\n", int_op_code);
+        switch (int_op_code) {
             case QUIT_CLIENT:
                 close(response);
                 close(request);

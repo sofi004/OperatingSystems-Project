@@ -132,8 +132,11 @@ int main(int argc, char* argv[]) {
     if(client_list.path_list[list_index].req_pipe_path[0] != '\0'){
       continue;
     }
-    int op_code = 0;
+    char op_code[2];
+    printf("antes do read do op_code\n");
     ssize_t ret = read(geral, &op_code, sizeof(op_code));
+    op_code[ret] = '\0';
+    printf("depois do read do op_code\n");
     if (ret == 0) {
         // ret == 0 indicates EOF
         //fprintf(stderr, "[INFO]: pipe closed\n");
@@ -144,12 +147,14 @@ int main(int argc, char* argv[]) {
           exit(EXIT_FAILURE);
         }
     }
-
-
-    switch (op_code) {
+    printf("string op code: %s\n", op_code);
+    int int_op_code = atoi(op_code);
+    printf("int op code: %d\n", int_op_code);
+    switch (int_op_code) {
         case 0:
           break;
         case SETUP_CLIENT:
+          printf("entrou no setup\n");
           //tratamento do request pipe
           int name_len = 0;
           pthread_mutex_lock(&client_list.tail_lock);
@@ -170,6 +175,7 @@ int main(int argc, char* argv[]) {
               fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
               exit(EXIT_FAILURE);
           }
+          printf("%s\n", client_list.path_list[tail].req_pipe_path);
           //tratamento do response pipe
           ret = read(geral, &name_len, sizeof(name_len));
           if (ret == 0) {
@@ -180,6 +186,7 @@ int main(int argc, char* argv[]) {
             fprintf(stderr, "[ERR]: read failed: %s\n", strerror(errno));
           }
           ret = read(geral, &client_list.path_list[tail].resp_pipe_path, name_len);
+          printf("%s\n", client_list.path_list[tail].resp_pipe_path);
           if (ret == 0) {
               // ret == 0 indicates EOF
               fprintf(stderr, "[INFO]: pipe closed\n");
