@@ -396,7 +396,20 @@ int ems_list_events(int out_fd){
     char buffer[25];
     memset(buffer, '\0', 25);
     sprintf(buffer, "Event: %d\n", event_list[i]);
-    ret = write(out_fd, buffer, strlen(buffer));
+    int len = strlen(buffer);
+    int done = 0;
+    while (len > 0) {
+        int bytes_written = write(out_fd, buffer + done, len);
+
+        if (bytes_written < 0){
+          fprintf(stderr, "write error: %s\n", strerror(errno));
+          return -1;
+        }
+
+        /* might not have managed to write all, len becomes what remains */
+        len -= bytes_written;
+        done += bytes_written;
+    }
   }
   return 0;
 }
